@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "category",
+    "id",
+    "username"
+  ]
+}
