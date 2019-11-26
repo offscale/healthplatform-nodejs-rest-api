@@ -1,0 +1,38 @@
+language: node_js
+node_js:
+    - "lts/*"
+
+addons:
+    apt:
+        packages:
+            - gyp
+
+services:
+    - postgresql
+    - redis-server
+
+cache:
+    npm: true
+
+before_install:
+    - npm config set spin false
+    - npm install -g npm
+    - npm install -g bunyan mocha node-gyp tslint typings typescript
+
+install:
+    - typings install
+    - npm ci
+
+env:
+    global:
+        - RDBMS_URI='postgres://postgres@localhost/travis_ci_test'
+
+before_script:
+    - psql -c 'create database travis_ci_test;' -U postgres
+
+script:
+    - tsc
+    - npm test
+
+after_success:
+    - npm run coverage

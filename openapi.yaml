@@ -1,0 +1,528 @@
+openapi: '3.0.0'
+info:
+    version: 0.0.1
+    title: HealthPlatform
+    description: System for doctors to triage patient images
+    termsOfService: https://healthplatform.io/terms/
+    contact:
+        name: HealthPlatform maintainer
+        email: samuel@offscale.io
+        url: https://offscale.io
+    license:
+        name: (Apache-2.0 OR MIT)
+        url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+    - url: https://healthplatform.io/api
+paths:
+    /users:
+        get:
+            description: |
+                Returns all users from the system that the user has access to
+            operationId: findUsers
+            parameters:
+                - name: x-access-token
+                  in: header
+                  description: access token to be passed as a header
+                  required: true
+                  schema:
+                      type: string
+                - name: role
+                  in: query
+                  description: 'role to filter by, e.g.: ophthalmologist'
+                  required: false
+                  style: form
+                  schema:
+                      type: array
+                      items:
+                          type: string
+                - name: limit
+                  in: query
+                  description: maximum number of results to return
+                  required: false
+                  schema:
+                      type: integer
+                      format: int32
+            responses:
+                '200':
+                    description: user response
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/User'
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+        post:
+            description: Register a new.  Duplicates are not allowed
+            operationId: registerUser
+            requestBody:
+                description: User to add to the store
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/User'
+            responses:
+                '200':
+                    description: User response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+    /users/{username}:
+        get:
+            description: 'Returns a user based on a single ID, if the user has access to the user at username and user at ID exists'
+            operationId: find user by id
+            parameters:
+                - name: x-access-token
+                  in: header
+                  description: access token to be passed as a header
+                  required: true
+                  schema:
+                      type: string
+
+                - name: username
+                  in: path
+                  description: username of user to fetch
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: user response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+        delete:
+            description: deletes a user based on the ID supplied (only used for test cleanup)
+            operationId: deleteUser
+            parameters:
+                - name: x-access-token
+                  in: header
+                  description: access token to be passed as a header
+                  required: true
+                  schema:
+                      type: string
+
+                - name: username
+                  in: path
+                  description: ID of user to delete
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '204':
+                    description: user deleted
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+    /auth:
+        get:
+            description: |
+                Returns user associated with access token (or expiry details for current key?)
+            operationId: checkAuth
+            parameters:
+                - name: x-access-token
+                  in: header
+                  description: access token to be passed as a header
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: user response
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/User'
+                '403':
+                    description: access token invalid
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                '404':
+                    description: user or access token not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+        post:
+            description: Login a user.  Duplicates are allowed
+            operationId: loginUser
+            requestBody:
+                description: User to authenticate
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/User'
+            responses:
+                '200':
+                    description: User response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+        delete:
+            description: logout a user
+            operationId: logoutUser
+            parameters:
+                - name: x-access-token
+                  in: header
+                  description: access token to be passed as a header
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '204':
+                    description: user logged ut
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+    /img/{id}:
+        get:
+            description: |
+                Returns user associated with access token (or expiry details for current key?)
+            operationId: getImage
+            parameters:
+                - name: x-access-token
+                  in: header
+                  description: access token to be passed as a header
+                  required: true
+                  schema:
+                      type: string
+                - name: id
+                  in: path
+                  description: id of image object to fetch
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: image response
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Image'
+                '403':
+                    description: access token invalid
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                '404':
+                    description: user or access token not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+    /categorise:
+        get:
+            description: |
+                Get array of categoise objects matching filters
+            operationId: getCategory
+            parameters:
+                - name: x-access-token
+                  in: header
+                  description: access token to be passed as a header
+                  required: true
+                  schema:
+                      type: string
+                - name: category
+                  in: query
+                  description: 'categories to filter by, e.g.: "review_again"'
+                  required: false
+                  style: form
+                  schema:
+                      type: array
+                      items:
+                          type: string
+                - name: limit
+                  in: query
+                  description: maximum number of results to return
+                  required: false
+                  schema:
+                      type: integer
+                      format: int32
+            responses:
+                '200':
+                    description: image response
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Categorise'
+                '403':
+                    description: access token invalid
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                '404':
+                    description: user or access token not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+        post:
+            description: Categorise
+            operationId: createCategorisation
+            requestBody:
+                description: Categorise object to store
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Categorise'
+            responses:
+                '200':
+                    description: Categorise response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Categorise'
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+    /category_enum:
+        get:
+            description: |
+                Get array of CategoryEnum objects matching filters
+            operationId: getCategoryEnum
+            parameters:
+                - name: x-access-token
+                  in: header
+                  description: access token to be passed as a header
+                  required: true
+                  schema:
+                      type: string
+                - name: CategoryEnum
+                  in: query
+                  description: 'CategoryEnum to filter by, e.g.: "experimentNumber5"'
+                  required: false
+                  style: form
+                  schema:
+                      type: array
+                      items:
+                          type: string
+                - name: limit
+                  in: query
+                  description: maximum number of results to return
+                  required: false
+                  schema:
+                      type: integer
+                      format: int32
+            responses:
+                '200':
+                    description: image response
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/CategoryEnum'
+                '403':
+                    description: access token invalid
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+                '404':
+                    description: user or access token not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+        post:
+            description: Create CategoryEnum
+            operationId: createCategoryEnum
+            requestBody:
+                description: CategoryEnum object to store
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CategoryEnum'
+            responses:
+                '200':
+                    description: Categorise response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CategoryEnum'
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+        put:
+            description: Update CategoryEnum
+            operationId: createCategoryEnum
+            requestBody:
+                description: CategoryEnum object to store
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CategoryEnum'
+            responses:
+                '200':
+                    description: Categorise response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CategoryEnum'
+                default:
+                    description: unexpected error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Error'
+components:
+    schemas:
+        User:
+            allOf:
+                - $ref: '#/components/schemas/NewUser'
+                - type: object
+                  required:
+                      - username
+                  properties:
+                      username:
+                          type: string
+
+        NewUser:
+            type: object
+            required:
+                - username
+                - email
+                - password
+            properties:
+                username: # Need username not just email field for hiding bias of known email
+                    type: string
+                email:
+                    type: string
+                role:
+                    type: array
+                    items:
+                        type: string
+                tag:
+                    type: string
+        Image:
+            type: object
+            required:
+                - location
+                - id
+            properties:
+                location:  # s3 URL, local path, or whatever
+                    type: string
+                id:  # Unique identifier, as the same image location might be referenced multiple times, should have an `img_` prefix
+                    type: string
+        Categorise:
+            type: object
+            required:
+                - category
+                - id
+                - username
+            properties:
+                username:
+                    type: string
+                updatedAt:
+                    type: string
+                    # the date-time notation as defined by RFC 3339, section 5.6, for example, 2017-07-21T17:32:28Z
+                category:
+                    type: string
+                id:  # Unique identifier
+                    type: string
+        CategoryEnum:
+            type: object
+            required:
+                - name
+                - enum
+            properties:
+                name: # Unique identifier
+                    type: string
+                enum:
+                    type: array
+                    items:
+                        type: string
+        Error:
+            type: object
+            required:
+                - error
+                - error_message
+            properties:
+                code:
+                    type: integer
+                    format: int32
+                error:
+                    type: string
+                error_message:
+                    type: string
