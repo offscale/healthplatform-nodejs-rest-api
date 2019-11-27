@@ -1,4 +1,4 @@
-import { map, waterfall } from 'async';
+import { each, map, waterfall } from 'async';
 import { createLogger } from 'bunyan';
 import * as path from 'path';
 import { basename } from 'path';
@@ -31,7 +31,7 @@ const models_and_routes: IModelRoute = {
 process.env['NO_SAMPLE_DATA'] = 'true';
 
 const user_mocks_subset: User[] = user_mocks.successes.slice(24, 36);
-const mocks: Categorise[] = categorise_mocks.successes.slice(24, 36);
+const mocks: Categorise[] = categorise_mocks(user_mocks_subset).successes.slice(24, 36);
 const tapp_name = `test::${basename(__dirname)}`;
 const connection_name = `${tapp_name}::${path.basename(__filename).replace(/\./g, '-')}`;
 const logger = createLogger({ name: tapp_name });
@@ -83,18 +83,20 @@ describe('Categorise::routes', () => {
                     .catch(cb),
             done)
         );
-        after(async () => {
-            for (const categorise of mocks)
-                try {
-                    await sdk.remove(categorise);
-                } catch {
-                    // ignore
-                }
-            await unregister_all(auth_sdk, user_mocks_subset)
-        });
+        after((done) =>
+            each(mocks,
+                (categorise, cb) =>
+                    sdk.remove(categorise),
+                (err) => {
+                    if (err != null) return done(err);
+                    unregister_all(auth_sdk, user_mocks_subset)
+                        .then(() => done(void 0))
+                        .catch(done)
+                })
+        );
 
         it('POST should create Categorise object', async () =>
-            await sdk.post(mocks[0])
+            mocks[0] = (await sdk.post(mocks[0])).body
         );
 
         it('GET should retrieve Categorise object', async () => {
@@ -103,12 +105,12 @@ describe('Categorise::routes', () => {
         });
 
         it('PUT should update Categorise object', async () => {
-            const create_response = await sdk.post(mocks[2]);
-            const response = await sdk.update(create_response.body.id, { category: 'Sir' });
-            mocks[2] = (await sdk.get(response.body.id)).body;
-            expect(create_response.body.category).to.be.not.eql(response.body.category);
-            expect(create_response.body.id).to.be.eql(response.body.id);
-            expect(create_response.body).to.deep.eq(mocks[2]);
+            const create_response = (await sdk.post(mocks[2])).body;
+            const response = (await sdk.update(create_response.id, { category: 'Sir' })).body;
+            mocks[2] = (await sdk.get(response.id)).body;
+            expect(create_response.category).to.be.not.eql(response.category);
+            expect(create_response.id).to.be.eql(response.id);
+            expect(create_response).to.deep.eq(mocks[2]);
         });
 
         it('GET /api/categorise should get all Categorise objects', async () =>

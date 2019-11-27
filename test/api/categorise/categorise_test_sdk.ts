@@ -86,6 +86,7 @@ export class CategoriseTestSDK {
                     try {
                         expect(res.status).to.be.equal(201);
                         expect(res.body).to.be.an('object');
+                        console.info('res.body:', res.body, ';');
                         expect(removeNullProperties(res.body)).to.be.jsonSchema(categorise_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);

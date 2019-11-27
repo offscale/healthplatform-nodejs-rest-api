@@ -1,5 +1,6 @@
 import { Categorise } from '../../../api/categorise/models';
-export declare const categorise_mocks: {
+import { User } from '../../../api/user/models';
+export declare const categorise_mocks: (users: User[]) => {
     successes: Categorise[];
     failures: Array<{}>;
 };
