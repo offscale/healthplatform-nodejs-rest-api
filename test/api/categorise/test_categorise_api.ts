@@ -43,32 +43,25 @@ describe('Categorise::routes', () => {
     let app: Server;
 
     before(done =>
-        console.info('waterfall') as any || waterfall([
-            tearDownConnections,
-            cb => typeof AccessToken.reset() === 'undefined' && cb(void 0),
-            cb => {
-                console.info('Before `setupOrmApp`');
-                return cb(void 0);
-            },
-            cb => setupOrmApp(model_route_to_map(models_and_routes), { logger, connection_name },
-                { skip_start_app: true, app_name: tapp_name, logger },
-                cb
-            ),
-            (_app: Server, orms_out: IOrmsOut, cb) => {
-                console.info('(_app: Server, orms_out: IOrmsOut, cb)');
-                app = _app;
-                _orms_out.orms_out = orms_out;
+        waterfall([
+                tearDownConnections,
+                cb => typeof AccessToken.reset() === 'undefined' && cb(void 0),
+                cb => setupOrmApp(model_route_to_map(models_and_routes), { logger, connection_name },
+                    { skip_start_app: true, app_name: tapp_name, logger },
+                    cb
+                ),
+                (_app: Server, orms_out: IOrmsOut, cb) => {
+                    app = _app;
+                    _orms_out.orms_out = orms_out;
 
-                console.info('set orms');
+                    sdk = new CategoriseTestSDK(_app);
+                    auth_sdk = new AuthTestSDK(_app);
+                    user_sdk = new UserTestSDK(_app);
 
-                sdk = new CategoriseTestSDK(_app);
-                auth_sdk = new AuthTestSDK(_app);
-                user_sdk = new UserTestSDK(_app);
-
-                return cb(void 0);
-            }
-        ],
-        done
+                    return cb(void 0);
+                }
+            ],
+            done
         )
     );
 
@@ -78,17 +71,16 @@ describe('Categorise::routes', () => {
 
     describe('/api/categorise', () => {
         before('register_all', done => map(user_mocks_subset, (user, cb) =>
-            console.info('register_all inner') as any || user_sdk.register(user)
-                .then(res => {
-                    user.access_token = res!.header['x-access-token'];
+                user_sdk
+                    .register(user)
+                    .then(res => {
+                        user.access_token = res!.header['x-access-token'];
 
-                    console.info('Preparing to set ac');
+                        sdk.access_token = user.access_token!;
 
-                    sdk.access_token = user.access_token;
-
-                    return cb(void 0);
-                })
-                .catch(cb),
+                        return cb(void 0);
+                    })
+                    .catch(cb),
             done)
         );
         after(async () => {

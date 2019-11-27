@@ -36,10 +36,10 @@
   },
   "dependencies": {
     "@offscale/custom-restify-errors": "^0.0.7",
-    "@offscale/nodejs-utils": "^0.0.10",
+    "@offscale/nodejs-utils": "^0.0.11",
     "@offscale/orm-mw": "^0.0.10",
     "@offscale/restify-validators": "^0.0.4",
-    "@offscale/routes-merger": "^0.0.6",
+    "@offscale/routes-merger": "^0.0.7",
     "argon2": "0.25.1",
     "async": "^3.1.0",
     "bunyan": "^1.8.12",

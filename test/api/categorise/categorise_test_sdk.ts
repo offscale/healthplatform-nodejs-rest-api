@@ -21,7 +21,18 @@ chai.use(require('chai-json-schema-ajv'));
 const expect: Chai.ExpectStatic = chai.expect;
 
 export class CategoriseTestSDK {
-    public access_token?: AccessTokenType;
+    private _access_token?: AccessTokenType;
+
+
+    public get access_token(): AccessTokenType {
+        if (this._access_token == null)
+            throw new TypeError('`access_token` argument must be defined');
+        return this._access_token;
+    };
+
+    public set access_token(new_access_token: AccessTokenType) {
+        this._access_token = new_access_token;
+    }
 
     constructor(public app: Server) {
     }
@@ -37,7 +48,7 @@ export class CategoriseTestSDK {
                     supertest(this.app)
                         .get(`/api/categorise${categorise_id}`)
                         .set('Accept', 'application/json')
-                        .set('X-Access-Token', this.access_token!)
+                        .set('X-Access-Token', this.access_token)
                         // .expect('Content-Type', /json/)
                         .end((err, res: Response) => {
                             if (err != null) reject(supertestGetError(err, res));
@@ -66,6 +77,7 @@ export class CategoriseTestSDK {
                 .post('/api/categorise')
                 .send(categorise)
                 .set('Accept', 'application/json')
+                .set('X-Access-Token', this.access_token)
                 .expect('Content-Type', /json/)
                 .end((err, res: Response) => {
                     if (err != null) return reject(supertestGetError(err, res));
@@ -93,10 +105,10 @@ export class CategoriseTestSDK {
             testObjectValidation(this)
                 .then(() =>
                     supertest(this.app)
-                        .put(`/api/categorise${this.access_token!.indexOf('admin') > -1 && categorise_id ?
+                        .put(`/api/categorise${this.access_token.indexOf('admin') > -1 && categorise_id ?
                             '/' + categorise_id : ''}`)
                         .set('Accept', 'application/json')
-                        .set('X-Access-Token', this.access_token!)
+                        .set('X-Access-Token', this.access_token)
                         .send(categorise)
                         // .expect('Content-Type', /json/)
                         .end((err, res: Response) => {
@@ -127,10 +139,10 @@ export class CategoriseTestSDK {
             testObjectValidation(this)
                 .then(() =>
                     supertest(this.app)
-                        .delete(`/api/categorise${this.access_token!.indexOf('admin') > -1 && categorise['id'] ?
+                        .delete(`/api/categorise${this.access_token.indexOf('admin') > -1 && categorise['id'] ?
                             '/' + categorise['id'] : ''}`)
                         .set('Accept', 'application/json')
-                        .set('X-Access-Token', this.access_token!)
+                        .set('X-Access-Token', this.access_token)
                         .send(categorise)
                         // .expect('Content-Type', /json/)
                         .end((err, res: Response) => {
@@ -156,7 +168,7 @@ export class CategoriseTestSDK {
                     expect(categorise_routes.read).to.be.an.instanceOf(Function);
                     supertest(this.app)
                         .get('/api/categorises')
-                        .set('X-Access-Token', this.access_token!)
+                        .set('X-Access-Token', this.access_token)
                         .set('Accept', 'application/json')
                         .end((err, res: Response) => {
                             if (err != null) return reject(supertestGetError(err, res));
