@@ -24,7 +24,8 @@ const models_and_routes: IModelRoute = {
 
 process.env['NO_SAMPLE_DATA'] = 'true';
 
-const mocks: User[] = user_mocks.successes.slice(24, 36);
+const _rng = [24, 36];
+const mocks: User[] = user_mocks.successes.slice(..._rng);
 const tapp_name = `test::${basename(__dirname)}`;
 const connection_name = `${tapp_name}::${path.basename(__filename).replace(/\./g, '-')}`;
 const logger = createLogger({ name: tapp_name });

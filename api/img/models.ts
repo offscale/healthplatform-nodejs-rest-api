@@ -1,8 +1,10 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 
-@Entity('image_tbl')
-export class Image {
+@Entity('img_tbl')
+export class Img {
+    static _omit: string[] = [];
+
     @PrimaryGeneratedColumn()
     public id!: number;
 

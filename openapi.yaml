@@ -245,7 +245,7 @@ paths:
                             schema:
                                 type: array
                                 items:
-                                    $ref: '#/components/schemas/Image'
+                                    $ref: '#/components/schemas/Img'
                 '403':
                     description: access token invalid
                     content:
