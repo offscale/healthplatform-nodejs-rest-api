@@ -1,7 +1,7 @@
 import * as restify from 'restify';
 import { Request } from 'restify';
 
-import { has_body, mk_valid_body_mw } from '@offscale/restify-validators';
+import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
@@ -23,8 +23,7 @@ export const get = (app: restify.Server, namespace: string = '') =>
 
 export const update = (app: restify.Server, namespace: string = '') =>
     app.put(`${namespace}/:id`, has_auth(), has_body,
-        mk_valid_body_mw(schema),
-        // mk_valid_body_mw_ignore(schema, ['Missing required property']),
+        mk_valid_body_mw_ignore(schema, ['Missing required property']),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             updateCategorise(request as CategoriseBodyReq)
                 .then(categorise => {

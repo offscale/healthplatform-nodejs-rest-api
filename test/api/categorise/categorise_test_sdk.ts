@@ -117,11 +117,9 @@ export class CategoriseTestSDK {
                         .set('Accept', 'application/json')
                         .set('X-Access-Token', this.access_token)
                         .send(categorise)
-                        .expect('Content-Type', /json/)
-                        .end((err, res: Response) => {
-                            if (err != null) reject(supertestGetError(err, res));
-                            else if (res.error) return reject(getError(res.error));
-
+                        // .expect('Content-Type', /json/)
+                        .then((res: Response) => {
+                            if (res.error) return reject(getError(res.error));
                             try {
                                 expect(res.status).to.be.equal(200);
                                 expect(res.body).to.be.an('object');
@@ -132,6 +130,7 @@ export class CategoriseTestSDK {
                             }
                             return resolve(res);
                         })
+                        .catch(err => reject(supertestGetError(err)))
                 )
                 .catch(reject)
         });

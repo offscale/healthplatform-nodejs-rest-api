@@ -109,11 +109,8 @@ describe('Categorise::routes', () => {
         );
 
         it('GET should retrieve Categorise object', async () => {
-            console.info('b4::mocks[1]:', mocks[1], ';');
             mocks[1] = (await sdk.post(mocks[1])).body;
-            console.info('l8::mocks[1]:', mocks[1], ';');
-            const r = (await sdk.get(mocks[1].id));
-            console.info('now r:', r, ';');
+            await sdk.get(mocks[1].id);
         });
 
         it('PUT should update Categorise object', async () => {
@@ -122,6 +119,7 @@ describe('Categorise::routes', () => {
             mocks[2] = (await sdk.get(updated.id)).body;
             expect(created.category).to.be.not.eql(updated.category);
             expect(created.id).to.be.eql(updated.id);
+            ['category', 'updatedAt'].forEach(k => created[k] = mocks[2][k]);
             expect(created).to.deep.eq(mocks[2]);
         });
 
