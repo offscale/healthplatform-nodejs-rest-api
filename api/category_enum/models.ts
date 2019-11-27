@@ -1,13 +1,15 @@
 import { Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
 
-@Entity('categorise_enum_tbl')
+@Entity('category_enum_tbl')
 export class CategoryEnum {
+    static _omit: string[] = [];
+
     @PrimaryColumn({ type: 'varchar', nullable: false, unique: true })
     public name!: string;
 
     @Column('simple-array', { nullable: false })
-    public enum!: string[];
+    public enumeration!: string[];
 
     @CreateDateColumn({ name: 'createdAt', precision: 3 })
     public createdAt?: Date;

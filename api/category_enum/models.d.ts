@@ -1,6 +1,7 @@
 export declare class CategoryEnum {
+    static _omit: string[];
     name: string;
-    enum: string[];
+    enumeration: string[];
     createdAt?: Date;
     updatedAt?: Date;
 }
