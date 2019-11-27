@@ -3,6 +3,8 @@ import { Column, CreateDateColumn, Entity, PrimaryColumn, PrimaryGeneratedColumn
 
 @Entity('categorise_tbl')
 export class Categorise {
+    static _omit: string[] = [];
+
     @PrimaryGeneratedColumn()
     public id!: number;
 

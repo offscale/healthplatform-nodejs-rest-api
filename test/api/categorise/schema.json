@@ -7,7 +7,7 @@
     "updatedAt": {
       "type": "string"
     },
-    "category": {
+    "categorise": {
       "type": "string"
     },
     "id": {
@@ -15,7 +15,7 @@
     }
   },
   "required": [
-    "category",
+    "categorise",
     "id",
     "username"
   ]

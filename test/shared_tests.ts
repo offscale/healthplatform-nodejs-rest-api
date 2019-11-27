@@ -58,6 +58,14 @@ export const tearDownConnections = (orms_out_or_done: Done | IOrmsOut, done?: Do
         : tearDownConns(orms_out_or_done as IOrmsOut, e => (done as Done)(e));
 
 export const closeApp = (app: Server) => (done: Done) =>
-    app.close(() => done(void 0));
+    app == null ? done(void 0) : app.close(() => done(void 0));
 
 // after('closeApp', done => (app as Server).close(() => done(void 0));
+
+// Add all common tests here, e.g.: check for existence of tables & connection to db, check test sdk properties, &etc.
+export const testObjectValidation = (common_test_obj: {access_token?: AccessTokenType}): Promise<void> =>
+    new Promise((resolve, reject) =>
+        common_test_obj.access_token == null || !common_test_obj.access_token.length ?
+            reject(new TypeError('`this.access_token` argument must be defined'))
+            : resolve()
+    );

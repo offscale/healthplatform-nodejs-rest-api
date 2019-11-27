@@ -5,7 +5,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { Categorise } from './models';
 
-export type CategoriseBodyReq = Request & IOrmReq & {body?: Categorise};
+export type CategoriseBodyReq = Request & IOrmReq & {body?: Categorise, user_id?: string};
 
 export const createMw = (request: restify.Request, res: restify.Response, next: restify.Next) => {
     const req = request as unknown as CategoriseBodyReq;
