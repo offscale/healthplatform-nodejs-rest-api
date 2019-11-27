@@ -12,7 +12,7 @@ info:
         name: (Apache-2.0 OR MIT)
         url: https://www.apache.org/licenses/LICENSE-2.0.html
 servers:
-    - url: https://healthplatform.io/api
+    -   url: https://healthplatform.io/api
 paths:
     /users:
         get:
@@ -20,28 +20,28 @@ paths:
                 Returns all users from the system that the user has access to
             operationId: findUsers
             parameters:
-                - name: x-access-token
-                  in: header
-                  description: access token to be passed as a header
-                  required: true
-                  schema:
-                      type: string
-                - name: role
-                  in: query
-                  description: 'role to filter by, e.g.: ophthalmologist'
-                  required: false
-                  style: form
-                  schema:
-                      type: array
-                      items:
-                          type: string
-                - name: limit
-                  in: query
-                  description: maximum number of results to return
-                  required: false
-                  schema:
-                      type: integer
-                      format: int32
+                -   name: x-access-token
+                    in: header
+                    description: access token to be passed as a header
+                    required: true
+                    schema:
+                        type: string
+                -   name: role
+                    in: query
+                    description: 'role to filter by, e.g.: ophthalmologist'
+                    required: false
+                    style: form
+                    schema:
+                        type: array
+                        items:
+                            type: string
+                -   name: limit
+                    in: query
+                    description: maximum number of results to return
+                    required: false
+                    schema:
+                        type: integer
+                        format: int32
             responses:
                 '200':
                     description: user response
@@ -85,19 +85,19 @@ paths:
             description: 'Returns a user based on a single ID, if the user has access to the user at username and user at ID exists'
             operationId: find user by id
             parameters:
-                - name: x-access-token
-                  in: header
-                  description: access token to be passed as a header
-                  required: true
-                  schema:
-                      type: string
+                -   name: x-access-token
+                    in: header
+                    description: access token to be passed as a header
+                    required: true
+                    schema:
+                        type: string
 
-                - name: username
-                  in: path
-                  description: username of user to fetch
-                  required: true
-                  schema:
-                      type: string
+                -   name: username
+                    in: path
+                    description: username of user to fetch
+                    required: true
+                    schema:
+                        type: string
             responses:
                 '200':
                     description: user response
@@ -115,19 +115,19 @@ paths:
             description: deletes a user based on the ID supplied (only used for test cleanup)
             operationId: deleteUser
             parameters:
-                - name: x-access-token
-                  in: header
-                  description: access token to be passed as a header
-                  required: true
-                  schema:
-                      type: string
+                -   name: x-access-token
+                    in: header
+                    description: access token to be passed as a header
+                    required: true
+                    schema:
+                        type: string
 
-                - name: username
-                  in: path
-                  description: ID of user to delete
-                  required: true
-                  schema:
-                      type: string
+                -   name: username
+                    in: path
+                    description: ID of user to delete
+                    required: true
+                    schema:
+                        type: string
             responses:
                 '204':
                     description: user deleted
@@ -143,12 +143,12 @@ paths:
                 Returns user associated with access token (or expiry details for current key?)
             operationId: checkAuth
             parameters:
-                - name: x-access-token
-                  in: header
-                  description: access token to be passed as a header
-                  required: true
-                  schema:
-                      type: string
+                -   name: x-access-token
+                    in: header
+                    description: access token to be passed as a header
+                    required: true
+                    schema:
+                        type: string
             responses:
                 '200':
                     description: user response
@@ -204,12 +204,12 @@ paths:
             description: logout a user
             operationId: logoutUser
             parameters:
-                - name: x-access-token
-                  in: header
-                  description: access token to be passed as a header
-                  required: true
-                  schema:
-                      type: string
+                -   name: x-access-token
+                    in: header
+                    description: access token to be passed as a header
+                    required: true
+                    schema:
+                        type: string
             responses:
                 '204':
                     description: user logged ut
@@ -225,18 +225,18 @@ paths:
                 Returns user associated with access token (or expiry details for current key?)
             operationId: getImage
             parameters:
-                - name: x-access-token
-                  in: header
-                  description: access token to be passed as a header
-                  required: true
-                  schema:
-                      type: string
-                - name: id
-                  in: path
-                  description: id of image object to fetch
-                  required: true
-                  schema:
-                      type: string
+                -   name: x-access-token
+                    in: header
+                    description: access token to be passed as a header
+                    required: true
+                    schema:
+                        type: string
+                -   name: id
+                    in: path
+                    description: id of image object to fetch
+                    required: true
+                    schema:
+                        type: string
             responses:
                 '200':
                     description: image response
@@ -271,28 +271,28 @@ paths:
                 Get array of categoise objects matching filters
             operationId: getCategory
             parameters:
-                - name: x-access-token
-                  in: header
-                  description: access token to be passed as a header
-                  required: true
-                  schema:
-                      type: string
-                - name: category
-                  in: query
-                  description: 'categories to filter by, e.g.: "review_again"'
-                  required: false
-                  style: form
-                  schema:
-                      type: array
-                      items:
-                          type: string
-                - name: limit
-                  in: query
-                  description: maximum number of results to return
-                  required: false
-                  schema:
-                      type: integer
-                      format: int32
+                -   name: x-access-token
+                    in: header
+                    description: access token to be passed as a header
+                    required: true
+                    schema:
+                        type: string
+                -   name: category
+                    in: query
+                    description: 'categories to filter by, e.g.: "review_again"'
+                    required: false
+                    style: form
+                    schema:
+                        type: array
+                        items:
+                            type: string
+                -   name: limit
+                    in: query
+                    description: maximum number of results to return
+                    required: false
+                    schema:
+                        type: integer
+                        format: int32
             responses:
                 '200':
                     description: image response
@@ -350,28 +350,28 @@ paths:
                 Get array of CategoryEnum objects matching filters
             operationId: getCategoryEnum
             parameters:
-                - name: x-access-token
-                  in: header
-                  description: access token to be passed as a header
-                  required: true
-                  schema:
-                      type: string
-                - name: CategoryEnum
-                  in: query
-                  description: 'CategoryEnum to filter by, e.g.: "experimentNumber5"'
-                  required: false
-                  style: form
-                  schema:
-                      type: array
-                      items:
-                          type: string
-                - name: limit
-                  in: query
-                  description: maximum number of results to return
-                  required: false
-                  schema:
-                      type: integer
-                      format: int32
+                -   name: x-access-token
+                    in: header
+                    description: access token to be passed as a header
+                    required: true
+                    schema:
+                        type: string
+                -   name: CategoryEnum
+                    in: query
+                    description: 'CategoryEnum to filter by, e.g.: "experimentNumber5"'
+                    required: false
+                    style: form
+                    schema:
+                        type: array
+                        items:
+                            type: string
+                -   name: limit
+                    in: query
+                    description: maximum number of results to return
+                    required: false
+                    schema:
+                        type: integer
+                        format: int32
             responses:
                 '200':
                     description: image response
@@ -450,13 +450,13 @@ components:
     schemas:
         User:
             allOf:
-                - $ref: '#/components/schemas/NewUser'
-                - type: object
-                  required:
-                      - username
-                  properties:
-                      username:
-                          type: string
+                -   $ref: '#/components/schemas/NewUser'
+                -   type: object
+                    required:
+                        - username
+                    properties:
+                        username:
+                            type: string
 
         NewUser:
             type: object

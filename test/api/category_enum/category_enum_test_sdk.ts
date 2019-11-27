@@ -21,8 +21,10 @@ chai.use(require('chai-json-schema-ajv'));
 const expect: Chai.ExpectStatic = chai.expect;
 
 export class CategoryEnumTestSDK {
-    private _access_token?: AccessTokenType;
+    constructor(public app: Server) {
+    }
 
+    private _access_token?: AccessTokenType;
 
     public get access_token(): AccessTokenType {
         if (this._access_token == null)
@@ -32,9 +34,6 @@ export class CategoryEnumTestSDK {
 
     public set access_token(new_access_token: AccessTokenType) {
         this._access_token = new_access_token;
-    }
-
-    constructor(public app: Server) {
     }
 
     public get(category_enum_name: CategoryEnum['name']): Promise<Response> {

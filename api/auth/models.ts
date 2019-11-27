@@ -10,6 +10,8 @@ type LogoutArg = {user_id: string; access_token?: never} | {user_id?: never; acc
 let accessToken: AccessToken | undefined;
 
 export class AccessToken {
+    constructor(private redis: Redis) {}
+
     public static reset() {
         accessToken = undefined;
         delete global['accessToken'];
@@ -20,8 +22,6 @@ export class AccessToken {
             accessToken = new AccessToken(cursor);
         return accessToken;
     }
-
-    constructor(private redis: Redis) {}
 
     public findOne(access_token: AccessTokenType): Promise<string> {
         return new Promise<string>((resolve, reject) =>
@@ -39,7 +39,7 @@ export class AccessToken {
 
     public logout(arg: LogoutArg, callback: (err?: Error | RestError) => void) {
         if (arg.user_id)
-        // TODO: Rewrite this in Lua [maybe?]
+            // TODO: Rewrite this in Lua [maybe?]
             this.redis.smembers(arg.user_id, (err: Error, access_tokens: string[]) => {
                 if (err != null) return callback(err);
                 (this['redis'] as any)
