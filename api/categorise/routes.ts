@@ -12,14 +12,14 @@ export const create = (app: restify.Server, namespace: string = '') =>
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             createCategorise(request as CategoriseBodyReq)
                 .then(categorise => {
-                    res.json(categorise);
+                    res.json(201, categorise);
                     return next();
                 })
                 .catch(next);
         }
     );
 
-export const read = (app: restify.Server, namespace: string = '') =>
+export const getAll = (app: restify.Server, namespace: string = '') =>
     app.get(namespace, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             // TODO: Add query params

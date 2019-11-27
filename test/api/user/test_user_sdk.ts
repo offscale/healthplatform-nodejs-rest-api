@@ -111,7 +111,7 @@ describe('User::sdk', () => {
         it('GET should retrieve user', done => {
             auth_sdk.register_login(mocks[2])
                 .then(access_token =>
-                    sdk.read(access_token, mocks[2])
+                    sdk.getAll(access_token, mocks[2])
                         .then(() => done())
                         .catch(done)
                 )
@@ -121,11 +121,11 @@ describe('User::sdk', () => {
         it('PUT should update user', done => {
             auth_sdk.register_login(mocks[2])
                 .then(access_token =>
-                    sdk.read(access_token, mocks[2])
+                    sdk.getAll(access_token, mocks[2])
                         .then(() => {
                             sdk.update(access_token, void 0, { title: 'Sir' })
                                 .then((response) =>
-                                    sdk.read(access_token, response.body)
+                                    sdk.getAll(access_token, response.body)
                                         .then(() => done())
                                         .catch(done))
                                 .catch(done);
@@ -139,7 +139,7 @@ describe('User::sdk', () => {
             map(mocks.slice(4, 10), asyncify(auth_sdk.register_login.bind(auth_sdk)),
                 (err: Error | IncomingMessageError | null | undefined,
                  res: undefined | Array<AccessTokenType | undefined>) =>
-                    err != null ? done(err) : sdk.get_all((res as string[])[4]).then(() => done()).catch(done)
+                    err != null ? done(err) : sdk.getAll((res as string[])[4]).then(() => done()).catch(done)
             )
         );
 

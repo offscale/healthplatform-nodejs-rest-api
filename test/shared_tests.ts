@@ -67,5 +67,5 @@ export const testObjectValidation = (common_test_obj: {access_token?: AccessToke
     new Promise((resolve, reject) =>
         common_test_obj.access_token == null || !common_test_obj.access_token.length ?
             reject(new TypeError('`this.access_token` argument must be defined'))
-            : resolve()
+            : resolve(void 0)
     );

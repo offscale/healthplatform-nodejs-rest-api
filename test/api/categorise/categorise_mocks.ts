@@ -13,13 +13,9 @@ export const categorise_mocks: (users: User[]) => {successes: Categorise[], fail
             ],
             successes: Array(200)
                 .fill(void 0)
-                .map((_, idx) => {
+                .map(() => {
                     const categorise = new Categorise();
-
-                    categorise.id = idx;
-                    categorise.username = users[(idx % 3)].email;
                     categorise.category = faker.name.jobDescriptor();
-
                     return categorise;
                 })
         }

@@ -11,6 +11,6 @@ export declare class CategoriseTestSDK {
     get(categorise_id: Categorise['id']): Promise<Response>;
     post(categorise: Categorise): Promise<Response>;
     update(categorise_id: Categorise['id'], categorise: Partial<Categorise>): Promise<Response>;
-    remove(categorise: Categorise): Promise<Response>;
-    get_all(): Promise<Response>;
+    remove(categorise_id: Categorise['id']): Promise<Response>;
+    getAll(): Promise<Response>;
 }

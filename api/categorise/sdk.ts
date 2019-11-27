@@ -23,6 +23,9 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
     const categorise = new Categorise();
     Object.keys(req.body).map(k => categorise[k] = req.body[k]);
 
+    // TODO: Is admin check here
+    categorise.username = req.user_id!;
+
     req.getOrm().typeorm!.connection
         .getRepository(Categorise)
         .save(categorise)
@@ -96,9 +99,13 @@ export const removeCategorise = (req: Request & IOrmReq & {user_id?: string}) =>
                     message: `Actual categorise.username !== ${req.user_id}`
                 }));
             } else
-                CategoriseR
-                    .remove(categorise)
-                    .then(() => resolve())
+                req.getOrm().typeorm!.connection
+                    .createQueryBuilder()
+                    .delete()
+                    .from(Categorise)
+                    .where('id = :id', { id: req.params.id })
+                    .execute()
+                    .then(() => resolve(void 0))
                     .catch(reject);
         })
         .catch(reject);

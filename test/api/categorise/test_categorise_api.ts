@@ -30,8 +30,12 @@ const models_and_routes: IModelRoute = {
 
 process.env['NO_SAMPLE_DATA'] = 'true';
 
-const user_mocks_subset: User[] = user_mocks.successes.slice(24, 36);
-const mocks: Categorise[] = categorise_mocks(user_mocks_subset).successes.slice(24, 36);
+const _rng = [24, 36];
+const user_mocks_subset: User[] = user_mocks.successes.slice(..._rng);
+const mocks: Categorise[] = categorise_mocks(
+    Array(_rng[1] - _rng[0])
+        .fill(user_mocks_subset[0]))
+    .successes.slice(..._rng);
 const tapp_name = `test::${basename(__dirname)}`;
 const connection_name = `${tapp_name}::${path.basename(__filename).replace(/\./g, '-')}`;
 const logger = createLogger({ name: tapp_name });
@@ -86,7 +90,12 @@ describe('Categorise::routes', () => {
         after((done) =>
             each(mocks,
                 (categorise, cb) =>
-                    sdk.remove(categorise),
+                    categorise.id == null ?
+                        cb(void 0)
+                        : sdk
+                            .remove(categorise.id)
+                            .then(() => cb(void 0))
+                            .catch(cb),
                 (err) => {
                     if (err != null) return done(err);
                     unregister_all(auth_sdk, user_mocks_subset)
@@ -100,8 +109,11 @@ describe('Categorise::routes', () => {
         );
 
         it('GET should retrieve Categorise object', async () => {
+            console.info('b4::mocks[1]:', mocks[1], ';');
             mocks[1] = (await sdk.post(mocks[1])).body;
-            await sdk.get(mocks[1].id);
+            console.info('l8::mocks[1]:', mocks[1], ';');
+            const r = (await sdk.get(mocks[1].id));
+            console.info('now r:', r, ';');
         });
 
         it('PUT should update Categorise object', async () => {
@@ -114,12 +126,12 @@ describe('Categorise::routes', () => {
         });
 
         it('GET /api/categorise should get all Categorise objects', async () =>
-            await sdk.get_all()
+            await sdk.getAll()
         );
 
         it('DELETE should remove Categorise object', async () => {
             mocks[3] = (await sdk.post(mocks[3])).body;
-            await sdk.remove(mocks[3]);
+            await sdk.remove(mocks[3].id);
         });
     });
 });

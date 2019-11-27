@@ -126,7 +126,7 @@ export class UserTestSDK {
     public get_all(access_token: AccessTokenType) {
         return new Promise<Response>((resolve, reject) => {
             if (access_token == null || !access_token.length)
-                return reject(new TypeError('`access_token` argument to `get_all` must be defined'));
+                return reject(new TypeError('`access_token` argument to `getAll` must be defined'));
 
             expect(user_admin_routes.readAll).to.be.an.instanceOf(Function);
             supertest(this.app)
