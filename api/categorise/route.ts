@@ -1,22 +1,18 @@
 import * as restify from 'restify';
+import { Request } from 'restify';
 
-import { has_body } from '@offscale/restify-validators';
-import { GenericError } from '@offscale/custom-restify-errors';
+import { has_body, mk_valid_body_mw } from '@offscale/restify-validators';
+import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
-import { Categorise } from './models';
-import { CategoriseBodyReq, createMw } from './sdk';
+import { CategoriseBodyReq, getCategorise, removeCategorise, schema, updateCategorise } from './sdk';
 
 
 export const get = (app: restify.Server, namespace: string = '') =>
     app.get(`${namespace}/:id`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
-            const req = request as unknown as CategoriseBodyReq;
-
-            req.getOrm().typeorm!.connection
-                .getRepository(Categorise)
-                .findOne(req.body.id)
-                .then((categorise?: Categorise) => {
+            getCategorise(request as unknown as Request & IOrmReq)
+                .then(categorise => {
                     res.json(categorise);
                     return next();
                 })
@@ -26,25 +22,14 @@ export const get = (app: restify.Server, namespace: string = '') =>
 
 
 export const update = (app: restify.Server, namespace: string = '') =>
-    app.put(`${namespace}/:id`, has_auth(), has_body, /*remove_from_body(['email']),
-        mk_valid_body_mw(schema, false),
-        mk_valid_body_mw_ignore(schema, ['Missing required property']),*/
+    app.put(`${namespace}/:id`, has_auth(), has_body,
+        mk_valid_body_mw(schema),
+        // mk_valid_body_mw_ignore(schema, ['Missing required property']),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
-            const req = request as unknown as CategoriseBodyReq;
-
-            const CategoriseRepo = req.getOrm().typeorm!.connection
-                .getRepository(Categorise);
-
-            CategoriseRepo.findOne(req.body.id)
-                .then((categorise?: Categorise) => {
-                    if (categorise == null) return createMw(request, res, next);
-                    Object.keys(req.body).map(k => categorise[k] = req.body[k]);
-                    CategoriseRepo.save(categorise)
-                        .then(categorise => {
-                            res.json({ categorise });
-                            return next();
-                        })
-                        .catch(next);
+            updateCategorise(request as CategoriseBodyReq)
+                .then(categorise => {
+                    res.json(categorise);
+                    return next();
                 })
                 .catch(next);
         }
@@ -52,33 +37,12 @@ export const update = (app: restify.Server, namespace: string = '') =>
 
 
 export const remove = (app: restify.Server, namespace: string = '') =>
-    app.del(`${namespace}/:id`, has_auth(), has_body,
+    app.del(`${namespace}/:id`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
-            const req = request as unknown as CategoriseBodyReq;
-
-            const CategoriseRepo = req.getOrm().typeorm!.connection
-                .getRepository(Categorise);
-
-            CategoriseRepo
-                .findOne(req.body.id)
-                .then((categorise?: Categorise) => {
-                    if (categorise == null) {
-                        res.send(204);
-                        return next();
-                    } else if (categorise.username !== req.user_id) {
-                        return next(new GenericError({
-                            statusCode: 401,
-                            name: 'WrongUser',
-                            message: `Actual categorise.username !== ${req.user_id}`
-                        }));
-                    }
-                    CategoriseRepo
-                        .remove(categorise)
-                        .then(() => {
-                            res.send(204);
-                            return next();
-                        })
-                        .catch(next);
+            removeCategorise(request as unknown as Request & IOrmReq)
+                .then(() => {
+                    res.send(204);
+                    return next();
                 })
                 .catch(next);
         }

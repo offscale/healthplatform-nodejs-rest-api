@@ -1,14 +1,15 @@
-import { Column, CreateDateColumn, Entity, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 
 
 @Entity('categorise_tbl')
+@Unique('UQ_CAT_NAMES', ['username', 'category'])
 export class Categorise {
     static _omit: string[] = [];
 
     @PrimaryGeneratedColumn()
     public id!: number;
 
-    @Column({ type: 'varchar', name: 'username', nullable: false, unique: true })
+    @Column({ type: 'varchar', nullable: false })
     public username!: string;
 
     @Column('varchar', { nullable: false })

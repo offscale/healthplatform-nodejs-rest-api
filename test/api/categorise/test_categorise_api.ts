@@ -105,12 +105,12 @@ describe('Categorise::routes', () => {
         });
 
         it('PUT should update Categorise object', async () => {
-            const create_response = (await sdk.post(mocks[2])).body;
-            const response = (await sdk.update(create_response.id, { category: 'Sir' })).body;
-            mocks[2] = (await sdk.get(response.id)).body;
-            expect(create_response.category).to.be.not.eql(response.category);
-            expect(create_response.id).to.be.eql(response.id);
-            expect(create_response).to.deep.eq(mocks[2]);
+            const created = (await sdk.post(mocks[2])).body;
+            const updated = (await sdk.update(created.id, { category: 'Sir' })).body;
+            mocks[2] = (await sdk.get(updated.id)).body;
+            expect(created.category).to.be.not.eql(updated.category);
+            expect(created.id).to.be.eql(updated.id);
+            expect(created).to.deep.eq(mocks[2]);
         });
 
         it('GET /api/categorise should get all Categorise objects', async () =>

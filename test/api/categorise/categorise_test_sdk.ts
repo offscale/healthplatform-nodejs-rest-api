@@ -86,7 +86,7 @@ export class CategoriseTestSDK {
                     try {
                         expect(res.status).to.be.equal(201);
                         expect(res.body).to.be.an('object');
-                        console.info('res.body:', res.body, ';');
+                        console.info('res.body:', Object.keys(res.body).map(k => `${k}='${res.body[k]}'`).join(' '), ';');
                         expect(removeNullProperties(res.body)).to.be.jsonSchema(categorise_schema);
                     } catch (e) {
                         return reject(e as Chai.AssertionError);
@@ -140,8 +140,7 @@ export class CategoriseTestSDK {
             testObjectValidation(this)
                 .then(() =>
                     supertest(this.app)
-                        .delete(`/api/categorise${this.access_token.indexOf('admin') > -1 && categorise['id'] ?
-                            '/' + categorise['id'] : ''}`)
+                        .delete(`/api/categorise/${categorise['id']}`)
                         .set('Accept', 'application/json')
                         .set('X-Access-Token', this.access_token)
                         .send(categorise)

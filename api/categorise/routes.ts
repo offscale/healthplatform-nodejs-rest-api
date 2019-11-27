@@ -1,38 +1,34 @@
 import * as restify from 'restify';
+import { Request } from 'restify';
 
-import { JsonSchema } from 'tv4';
-
-import { has_body, mk_valid_body_mw } from '@offscale/restify-validators';
-import { NotFoundError } from '@offscale/custom-restify-errors';
+import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators';
+import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
-import { Categorise } from './models';
-import { CategoriseBodyReq, createMw } from './sdk';
-
-/* tslint:disable:no-var-requires */
-export const schema: JsonSchema = require('./../../test/api/categorise/schema');
+import { CategoriseBodyReq, createCategorise, getManyCategorise, schema } from './sdk';
 
 export const create = (app: restify.Server, namespace: string = '') =>
-    app.post(namespace, has_auth(), has_body, mk_valid_body_mw(schema), createMw);
+    app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(schema, ['id']),
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            createCategorise(request as CategoriseBodyReq)
+                .then(categorise => {
+                    res.json(categorise);
+                    return next();
+                })
+                .catch(next);
+        }
+    );
 
 export const read = (app: restify.Server, namespace: string = '') =>
     app.get(namespace, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
-            const req = request as unknown as CategoriseBodyReq;
             // TODO: Add query params
-            req.getOrm().typeorm!.connection
-                .getRepository(Categorise)
-                .find({
-                    order: {
-                        updatedAt: 'ASC'
-                    }
+            getManyCategorise(request as unknown as Request & IOrmReq)
+                .then(categorises => {
+                    res.json({ categorises });
+                    return next();
                 })
-                .then((categorises: Categorise[]) => {
-                    if (categorises == null || !categorises.length)
-                        return next(new NotFoundError('Categorise'));
-                    res.json({ categorises })
-                })
-                .catch(next);
+                .catch(next)
         }
     );
 
