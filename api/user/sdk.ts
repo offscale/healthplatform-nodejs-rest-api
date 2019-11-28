@@ -106,7 +106,7 @@ export const get = (req: UserBodyUserReq): Promise<User> => new Promise<User>((r
             user == null ? reject(new NotFoundError('User'))
                 : resolve(user)
         )
-        .catch(reject)
+        .catch(e => reject(fmtError(e)))
 );
 
 export const getAll = (req: IOrmReq): Promise<{users: User[]}> =>
@@ -121,7 +121,7 @@ export const getAll = (req: IOrmReq): Promise<{users: User[]}> =>
             .then((users: User[]) =>
                 (users == null || !users.length) ? reject(new NotFoundError('Users'))
                     : resolve({ users }))
-            .catch(reject)
+            .catch(e => reject(fmtError(e)))
     );
 
 export const update = (req: UserBodyUserReq): Promise<User | User[]> => new Promise((resolve, reject) => {

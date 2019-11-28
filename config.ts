@@ -37,7 +37,7 @@ export const typeorm_config: PostgresConnectionOptions = Object.freeze(
 
 // import * as sequelize from 'sequelize';
 export const sequelize_config /*: sequelize.Options*/ = {
-    dialect: 'postgres' as 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mssql' | 'mariadb',
+    dialect: 'postgres' as 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mssql',
     define: {
         timestamps: false
     }

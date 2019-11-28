@@ -4,7 +4,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { CategoryEnum } from './models';
 import { JsonSchema } from 'tv4';
-import { NotFoundError } from '@offscale/custom-restify-errors';
+import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('../../test/api/category_enum/schema');
@@ -31,7 +31,7 @@ export const createCategoryEnum = (req: CategoryEnumBodyReq) => new Promise<Cate
         .getRepository(CategoryEnum)
         .save(category_enum)
         .then(handleCategoryEnum(resolve, reject))
-        .catch(reject);
+        .catch(e => reject(fmtError(e)));
 });
 
 export const getCategoryEnum = (req: Request & IOrmReq) => new Promise<CategoryEnum>((resolve, reject) =>
@@ -41,7 +41,7 @@ export const getCategoryEnum = (req: Request & IOrmReq) => new Promise<CategoryE
             .getRepository(CategoryEnum)
             .findOne(req.params.name)
             .then(handleCategoryEnum(resolve, reject))
-            .catch(reject)
+            .catch(e => reject(fmtError(e)))
 );
 
 export const getManyCategoryEnum = (req: Request & IOrmReq) => new Promise<CategoryEnum[]>((resolve, reject) =>
@@ -57,7 +57,7 @@ export const getManyCategoryEnum = (req: Request & IOrmReq) => new Promise<Categ
                 reject(new NotFoundError('CategoryEnum'))
                 : resolve(category_enums)
         )
-        .catch(reject)
+        .catch(e => reject(fmtError(e)))
 );
 
 export const updateCategoryEnum = (req: CategoryEnumBodyReq) => new Promise<CategoryEnum>((resolve, reject) => {
@@ -79,9 +79,9 @@ export const updateCategoryEnum = (req: CategoryEnumBodyReq) => new Promise<Cate
             CategoryEnumR
                 .save(category_enum)
                 .then(handleCategoryEnum(resolve, reject))
-                .catch(reject);
+                .catch(e => reject(fmtError(e)));
         })
-        .catch(reject);
+        .catch(e => reject(fmtError(e)));
 });
 
 export const removeCategoryEnum = (req: Request & IOrmReq & {user_id?: string}) => new Promise<void>((resolve, reject) => {
@@ -105,7 +105,7 @@ export const removeCategoryEnum = (req: Request & IOrmReq & {user_id?: string}) 
                     .where('name = :name', { name: req.params.name })
                     .execute()
                     .then(() => resolve(void 0))
-                    .catch(reject);
+                    .catch(e => reject(fmtError(e)));
         })
-        .catch(reject);
+        .catch(e => reject(fmtError(e)));
 });

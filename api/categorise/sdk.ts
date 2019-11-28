@@ -4,7 +4,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { Categorise } from './models';
 import { JsonSchema } from 'tv4';
-import { GenericError, NotFoundError } from '@offscale/custom-restify-errors';
+import { fmtError, GenericError, NotFoundError } from '@offscale/custom-restify-errors';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('./../../test/api/categorise/schema');
@@ -34,7 +34,7 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
         .getRepository(Categorise)
         .save(categorise)
         .then(handleCategorise(resolve, reject))
-        .catch(reject);
+        .catch(e => reject(fmtError(e)));
 });
 
 export const getCategorise = (req: Request & IOrmReq) => new Promise<Categorise>((resolve, reject) =>
@@ -44,7 +44,7 @@ export const getCategorise = (req: Request & IOrmReq) => new Promise<Categorise>
             .getRepository(Categorise)
             .findOne(req.params.id)
             .then(handleCategorise(resolve, reject))
-            .catch(reject)
+            .catch(e => reject(fmtError(e)))
 );
 
 export const getManyCategorise = (req: Request & IOrmReq) => new Promise<Categorise[]>((resolve, reject) =>
@@ -60,7 +60,7 @@ export const getManyCategorise = (req: Request & IOrmReq) => new Promise<Categor
                 reject(new NotFoundError('Categorise'))
                 : resolve(categorises)
         )
-        .catch(reject)
+        .catch(e => reject(fmtError(e)))
 );
 
 export const updateCategorise = (req: CategoriseBodyReq) => new Promise<Categorise>((resolve, reject) => {
@@ -82,9 +82,9 @@ export const updateCategorise = (req: CategoriseBodyReq) => new Promise<Categori
             CategoriseR
                 .save(categorise)
                 .then(handleCategorise(resolve, reject))
-                .catch(reject);
+                .catch(e => reject(fmtError(e)));
         })
-        .catch(reject);
+        .catch(e => reject(fmtError(e)));
 });
 
 export const removeCategorise = (req: Request & IOrmReq & {user_id?: string}) => new Promise<void>((resolve, reject) => {
@@ -113,7 +113,7 @@ export const removeCategorise = (req: Request & IOrmReq & {user_id?: string}) =>
                     .where('id = :id', { id: req.params.id })
                     .execute()
                     .then(() => resolve(void 0))
-                    .catch(reject);
+                    .catch(e => reject(fmtError(e)));
         })
-        .catch(reject);
+        .catch(e => reject(fmtError(e)));
 });

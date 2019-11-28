@@ -8,6 +8,7 @@ import { AccessToken } from './models';
 export const has_auth = (scope = 'access') =>
     (request: restify.Request, res: restify.Response, next: restify.Next) => {
         const req = request as unknown as restify.Request & IOrmReq & {user_id: string};
+
         if (req.headers['x-access-token'] == null)
             if (req.params.access_token != null)
                 req.headers['x-access-token'] = req.params.access_token;

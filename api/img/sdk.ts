@@ -4,7 +4,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { Img } from './models';
 import { JsonSchema } from 'tv4';
-import { NotFoundError } from '@offscale/custom-restify-errors';
+import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('../../test/api/img/schema');
@@ -31,7 +31,7 @@ export const createImg = (req: ImgBodyReq) => new Promise<Img>((resolve, reject)
         .getRepository(Img)
         .save(img)
         .then(handleImg(resolve, reject))
-        .catch(reject);
+        .catch(e => reject(fmtError(e)));
 });
 
 export const getImg = (req: Request & IOrmReq) => new Promise<Img>((resolve, reject) =>
@@ -41,7 +41,7 @@ export const getImg = (req: Request & IOrmReq) => new Promise<Img>((resolve, rej
             .getRepository(Img)
             .findOne(req.params.id)
             .then(handleImg(resolve, reject))
-            .catch(reject)
+            .catch(e => reject(fmtError(e)))
 );
 
 export const getManyImg = (req: Request & IOrmReq) => new Promise<Img[]>((resolve, reject) =>
@@ -57,7 +57,7 @@ export const getManyImg = (req: Request & IOrmReq) => new Promise<Img[]>((resolv
                 reject(new NotFoundError('Img'))
                 : resolve(imgs)
         )
-        .catch(reject)
+        .catch(e => reject(fmtError(e)))
 );
 
 export const updateImg = (req: ImgBodyReq) => new Promise<Img>((resolve, reject) => {
@@ -79,9 +79,9 @@ export const updateImg = (req: ImgBodyReq) => new Promise<Img>((resolve, reject)
             ImgR
                 .save(img)
                 .then(handleImg(resolve, reject))
-                .catch(reject);
+                .catch(e => reject(fmtError(e)));
         })
-        .catch(reject);
+        .catch(e => reject(fmtError(e)));
 });
 
 export const removeImg = (req: Request & IOrmReq & {user_id?: string}) => new Promise<void>((resolve, reject) => {
@@ -105,7 +105,7 @@ export const removeImg = (req: Request & IOrmReq & {user_id?: string}) => new Pr
                     .where('id = :id', { id: req.params.id })
                     .execute()
                     .then(() => resolve(void 0))
-                    .catch(reject);
+                    .catch(e => reject(fmtError(e)));
         })
-        .catch(reject);
+        .catch(e => reject(fmtError(e)));
 });

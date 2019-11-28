@@ -8,6 +8,7 @@ import { expect } from 'chai';
 import { model_route_to_map } from '@offscale/nodejs-utils';
 import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
 import { IOrmsOut } from '@offscale/orm-mw/interfaces';
+import { TApp } from '@offscale/routes-merger/interfaces';
 
 import { _orms_out } from '../../../config';
 import { User } from '../../../api/user/models';
@@ -20,7 +21,6 @@ import { user_mocks } from '../user/user_mocks';
 import { UserTestSDK } from '../user/user_test_sdk';
 import { CategoriseTestSDK } from './categorise_test_sdk';
 import { categorise_mocks } from './categorise_mocks';
-import { TApp } from '@offscale/routes-merger/interfaces';
 
 
 const models_and_routes: IModelRoute = {
