@@ -27,13 +27,21 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
         // @ts-ignore
         .forEach(k => categorise[k] = req.body[k]);
 
-    // TODO: Is admin check here
+    // TODO: Use provided `username` if admin
     categorise.username = req.user_id!;
 
     req.getOrm().typeorm!.connection
-        .getRepository(Categorise)
-        .save(categorise)
-        .then(handleCategorise(resolve, reject))
+        .createQueryBuilder()
+        .insert()
+        .into(Categorise)
+        .values([categorise])
+        .execute()
+        .then((insertResult) => {
+            req.params.id = insertResult.identifiers.filter(o => Object.keys(o)[0] === 'id')[0];
+            getCategorise(req)
+                .then(resolve)
+                .catch(reject)
+        })
         .catch(e => reject(fmtError(e)));
 });
 

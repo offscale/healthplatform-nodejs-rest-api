@@ -1,28 +1,40 @@
 import * as faker from 'faker';
+
 import { Categorise } from '../../../api/categorise/models';
 import { User } from '../../../api/user/models';
+import { Artifact } from '../../../api/artifact/models';
 import { user_mocks } from '../user/user_mocks';
+import { artifact_mocks } from '../artifact/artifact_mocks';
 
-export const categorise_mocks: (users: User[]) => {successes: Categorise[], failures: Array<{}>} =
-    (users: User[]) => ({
+
+export const categorise_mocks: (users: User[],
+                                artifacts: Artifact[]) => {successes: Categorise[], failures: Array<{}>} =
+    (users: User[], artifacts: Artifact[]) => ({
             failures: [
                 {},
                 { email: 'foo@bar.com ' },
                 { password: 'foo ' },
                 { email: 'foo@bar.com', password: 'foo', bad_prop: true }
             ],
-            successes: Array(200)
+            successes: Array(users.length)
                 .fill(void 0)
-                .map(() => {
+                .map((_, idx) => {
                     const categorise = new Categorise();
+
                     categorise.category = `${faker.name.jobDescriptor()}_${Math.random()}`;
+                    categorise.username = users[idx].email;
+                    categorise.artifact = artifacts[idx];
+
                     return categorise;
                 })
         }
     );
 
 if (require.main === module) {
-    const user_mocks_subset: User[] = user_mocks.successes.slice(24, 36);
+    const _rng = [24, 36];
     /* tslint:disable:no-console */
-    console.info(categorise_mocks(user_mocks_subset).successes);
+    console.info(
+        categorise_mocks(user_mocks.successes, artifact_mocks.successes)
+            .successes.slice(..._rng)
+    );
 }

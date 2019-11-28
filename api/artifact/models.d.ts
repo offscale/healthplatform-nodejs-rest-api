@@ -1,7 +1,7 @@
-export declare class Img {
+export declare class Artifact {
     static _omit: string[];
-    id: number;
     location: string;
+    meta?: string;
     createdAt?: Date;
     updatedAt?: Date;
 }

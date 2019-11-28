@@ -5,15 +5,15 @@ import { has_body, mk_valid_body_mw_ignore } from '@offscale/restify-validators'
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
-import { getImg, ImgBodyReq, removeImg, schema, updateImg } from './sdk';
+import { ArtifactBodyReq, getArtifact, removeArtifact, schema, upsertArtifact } from './sdk';
 
 
 export const get = (app: restify.Server, namespace: string = '') =>
-    app.get(`${namespace}/:id`, has_auth(),
+    app.get(`${namespace}/:location`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
-            getImg(request as unknown as Request & IOrmReq)
-                .then(img => {
-                    res.json(img);
+            getArtifact(request as unknown as Request & IOrmReq)
+                .then(artifact => {
+                    res.json(artifact);
                     return next();
                 })
                 .catch(next);
@@ -22,12 +22,12 @@ export const get = (app: restify.Server, namespace: string = '') =>
 
 
 export const update = (app: restify.Server, namespace: string = '') =>
-    app.put(`${namespace}/:id`, has_auth(), has_body,
+    app.put(`${namespace}/:location`, has_auth(), has_body,
         mk_valid_body_mw_ignore(schema, ['Missing required property']),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
-            updateImg(request as ImgBodyReq)
-                .then(img => {
-                    res.json(img);
+            upsertArtifact(request as ArtifactBodyReq)
+                .then(artifact => {
+                    res.json(artifact);
                     return next();
                 })
                 .catch(next);
@@ -36,9 +36,9 @@ export const update = (app: restify.Server, namespace: string = '') =>
 
 
 export const remove = (app: restify.Server, namespace: string = '') =>
-    app.del(`${namespace}/:id`, has_auth(),
+    app.del(`${namespace}/:location`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
-            removeImg(request as unknown as Request & IOrmReq)
+            removeArtifact(request as unknown as Request & IOrmReq)
                 .then(() => {
                     res.send(204);
                     return next();

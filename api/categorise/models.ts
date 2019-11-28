@@ -1,19 +1,36 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    JoinColumn,
+    ManyToOne,
+    PrimaryGeneratedColumn,
+    Unique,
+    UpdateDateColumn
+} from 'typeorm';
+
+import { Artifact } from '../artifact/models';
 
 
 @Entity('categorise_tbl')
-@Unique('UQ_CAT_NAMES', ['username', 'category'])
+@Unique('UQ_CAT_NAMES', ['artifact', 'category', 'username'])
 export class Categorise {
     static _omit: string[] = [];
 
     @PrimaryGeneratedColumn()
     public id!: number;
 
-    @Column({ type: 'varchar', nullable: false })
-    public username!: string;
+
+    @ManyToOne(type => Artifact)
+    @JoinColumn({ name: 'artifact_location' })
+    public artifact!: Artifact;
 
     @Column('varchar', { nullable: false })
     public category!: string;
+
+    @Column({ type: 'varchar', nullable: false })
+    public username!: string;
+
 
     @CreateDateColumn({ name: 'createdAt', precision: 3 })
     public createdAt?: Date;

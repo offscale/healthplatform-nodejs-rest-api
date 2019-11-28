@@ -89,7 +89,7 @@ describe('CategoryEnum::routes', () => {
                     .catch(cb),
             done)
         );
-        after((done) =>
+        after('Remove all CategoryEnum objects', (done) =>
             each(mocks,
                 (category_enum, cb) =>
                     category_enum.name == null ?
@@ -98,12 +98,11 @@ describe('CategoryEnum::routes', () => {
                             .remove(category_enum.name)
                             .then(() => cb(void 0))
                             .catch(cb),
-                (err) => {
-                    if (err != null) return done(err);
-                    unregister_all(auth_sdk, user_mocks_subset)
-                        .then(() => done(void 0))
-                        .catch(done)
-                })
+                done)
+        );
+
+        after('unregister all Users', async() =>
+            await unregister_all(auth_sdk, user_mocks_subset)
         );
 
         it('POST should create CategoryEnum object', async () =>

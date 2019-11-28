@@ -8,38 +8,38 @@ import { expect } from 'chai';
 import { model_route_to_map } from '@offscale/nodejs-utils';
 import { IModelRoute } from '@offscale/nodejs-utils/interfaces';
 import { IOrmsOut } from '@offscale/orm-mw/interfaces';
+import { TApp } from '@offscale/routes-merger/interfaces';
 
 import { _orms_out } from '../../../config';
 import { User } from '../../../api/user/models';
 import { AccessToken } from '../../../api/auth/models';
-import { Img } from '../../../api/img/models';
+import { Artifact } from '../../../api/artifact/models';
 import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
 import { closeApp, tearDownConnections, unregister_all } from '../../shared_tests';
 import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { user_mocks } from '../user/user_mocks';
 import { UserTestSDK } from '../user/user_test_sdk';
-import { ImgTestSDK } from './img_test_sdk';
-import { img_mocks } from './img_mocks';
-import { TApp } from '@offscale/routes-merger/interfaces';
+import { ArtifactTestSDK } from './artifact_test_sdk';
+import { artifact_mocks } from './artifact_mocks';
 
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
     auth: all_models_and_routes_as_mr['auth'],
-    img: all_models_and_routes_as_mr['img']
+    artifact: all_models_and_routes_as_mr['artifact']
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
 
 const _rng = [62, 74];
 const user_mocks_subset: User[] = user_mocks.successes.slice(..._rng);
-const mocks: Img[] = img_mocks.successes.slice(..._rng);
+const mocks: Artifact[] = artifact_mocks.successes.slice(..._rng);
 const tapp_name = `test::${basename(__dirname)}`;
 const connection_name = `${tapp_name}::${path.basename(__filename).replace(/\./g, '-')}`;
 const logger = createLogger({ name: tapp_name });
 
-describe('Img::routes', () => {
-    let sdk: ImgTestSDK;
+describe('Artifact::routes', () => {
+    let sdk: ArtifactTestSDK;
     let auth_sdk: AuthTestSDK;
     let user_sdk: UserTestSDK;
     let app: Server;
@@ -57,7 +57,7 @@ describe('Img::routes', () => {
                     app = _app;
                     _orms_out.orms_out = orms_out;
 
-                    sdk = new ImgTestSDK(_app);
+                    sdk = new ArtifactTestSDK(_app);
                     auth_sdk = new AuthTestSDK(_app);
                     user_sdk = new UserTestSDK(_app);
 
@@ -72,7 +72,7 @@ describe('Img::routes', () => {
     after(done => closeApp(app)(done));
 
 
-    describe('/api/img', () => {
+    describe('/api/artifact', () => {
         before('register_all', done => map(user_mocks_subset, (user, cb) =>
                 user_sdk
                     .register(user)
@@ -86,49 +86,46 @@ describe('Img::routes', () => {
                     .catch(cb),
             done)
         );
-        after((done) =>
+        after('Remove all Artifact objects', (done) =>
             each(mocks,
-                (img, cb) =>
-                    img.id == null ?
+                (artifact, cb) =>
+                    artifact.location == null ?
                         cb(void 0)
                         : sdk
-                            .remove(img.id)
+                            .remove(artifact.location)
                             .then(() => cb(void 0))
                             .catch(cb),
-                (err) => {
-                    if (err != null) return done(err);
-                    unregister_all(auth_sdk, user_mocks_subset)
-                        .then(() => done(void 0))
-                        .catch(done)
-                })
+                done)
         );
 
-        it('POST should create Img object', async () =>
+        after('unregister all Users', async () =>
+            await unregister_all(auth_sdk, user_mocks_subset)
+        );
+
+        it('POST should create Artifact object', async () =>
             mocks[0] = (await sdk.post(mocks[0])).body
         );
 
-        it('GET should retrieve Img object', async () => {
+        it('GET should retrieve Artifact object', async () => {
             mocks[1] = (await sdk.post(mocks[1])).body;
-            await sdk.get(mocks[1].id);
+            await sdk.get(mocks[1].location);
         });
 
-        it('PUT should update Img object', async () => {
-            const created = (await sdk.post(mocks[2])).body;
-            const updated = (await sdk.update(created.id, { location: 'foobar' })).body;
-            mocks[2] = (await sdk.get(updated.id)).body;
-            expect(created.location).to.be.not.eql(updated.location);
-            expect(created.id).to.be.eql(updated.id);
-            ['location', 'updatedAt'].forEach(k => created[k] = mocks[2][k]);
-            expect(created).to.deep.eq(mocks[2]);
+        it('PUT should update Artifact object', async () => {
+            mocks[2] = (await sdk.post(mocks[2])).body;
+            const updated = (await sdk.update(mocks[2].location, { location: 'foobar' })).body;
+            expect(mocks[2].location).to.be.not.eql(updated.location);
+            ['location', 'updatedAt'].forEach(k => mocks[2][k] = updated[k]);
+            expect(mocks[2]).to.deep.eq(updated);
         });
 
-        it('GET /api/img should get all Img objects', async () =>
+        it('GET /api/artifact should get all Artifact objects', async () =>
             await sdk.getAll()
         );
 
-        it('DELETE should remove Img object', async () => {
+        it('DELETE should remove Artifact object', async () => {
             mocks[3] = (await sdk.post(mocks[3])).body;
-            await sdk.remove(mocks[3].id);
+            await sdk.remove(mocks[3].location);
         });
     });
 });

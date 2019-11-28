@@ -4,12 +4,11 @@
     "location": {
       "type": "string"
     },
-    "id": {
-      "type": "number"
+    "meta": {
+      "type": "string"
     }
   },
   "required": [
-    "location",
-    "id"
+    "location"
   ]
 }

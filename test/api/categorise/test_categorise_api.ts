@@ -21,11 +21,15 @@ import { user_mocks } from '../user/user_mocks';
 import { UserTestSDK } from '../user/user_test_sdk';
 import { CategoriseTestSDK } from './categorise_test_sdk';
 import { categorise_mocks } from './categorise_mocks';
+import { artifact_mocks } from '../artifact/artifact_mocks';
+import { ArtifactTestSDK } from '../artifact/artifact_test_sdk';
+import { Artifact } from '../../../api/artifact/models';
 
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
     auth: all_models_and_routes_as_mr['auth'],
+    artifact: all_models_and_routes_as_mr['artifact'],
     categorise: all_models_and_routes_as_mr['categorise']
 };
 
@@ -33,10 +37,10 @@ process.env['NO_SAMPLE_DATA'] = 'true';
 
 const _rng = [74, 86];
 const user_mocks_subset: User[] = user_mocks.successes.slice(..._rng);
-const mocks: Categorise[] = categorise_mocks(
-    Array(_rng[1] - _rng[0])
-        .fill(user_mocks_subset[0]))
-    .successes.slice(..._rng);
+const one_user_many: User[] = Array(user_mocks_subset.length).fill(user_mocks_subset[0]);
+const artifact_mocks_subset: Artifact[] = artifact_mocks.successes.slice(..._rng);
+const mocks: Categorise[] = categorise_mocks(one_user_many, artifact_mocks_subset).successes;
+
 const tapp_name = `test::${basename(__dirname)}`;
 const connection_name = `${tapp_name}::${path.basename(__filename).replace(/\./g, '-')}`;
 const logger = createLogger({ name: tapp_name });
@@ -45,6 +49,7 @@ describe('Categorise::routes', () => {
     let sdk: CategoriseTestSDK;
     let auth_sdk: AuthTestSDK;
     let user_sdk: UserTestSDK;
+    let artifact_sdk: ArtifactTestSDK;
     let app: Server;
 
     before(done =>
@@ -63,6 +68,7 @@ describe('Categorise::routes', () => {
                     sdk = new CategoriseTestSDK(_app);
                     auth_sdk = new AuthTestSDK(_app);
                     user_sdk = new UserTestSDK(_app);
+                    artifact_sdk = new ArtifactTestSDK(_app);
 
                     return cb(void 0);
                 }
@@ -82,14 +88,27 @@ describe('Categorise::routes', () => {
                     .then(res => {
                         user.access_token = res!.header['x-access-token'];
 
-                        sdk.access_token = user.access_token!;
+                        sdk.access_token = artifact_sdk.access_token = user.access_token!;
 
                         return cb(void 0);
                     })
                     .catch(cb),
             done)
         );
-        after((done) =>
+
+        before('create all Artifact objects', (done: Mocha.Done) => each(
+            Object.keys(artifact_mocks_subset).map(i => +i), (idx, cb) =>
+                artifact_sdk
+                    .post(artifact_mocks_subset[idx])
+                    .then(created_artifact_response => {
+                        artifact_mocks_subset[idx] = mocks[idx].artifact = created_artifact_response.body;
+                        return cb(void 0);
+                    })
+                    .catch(cb),
+            done)
+        );
+
+        after('remove all Categorise objects', (done) =>
             each(mocks,
                 (categorise, cb) =>
                     categorise.id == null ?
@@ -98,12 +117,21 @@ describe('Categorise::routes', () => {
                             .remove(categorise.id)
                             .then(() => cb(void 0))
                             .catch(cb),
-                (err) => {
-                    if (err != null) return done(err);
-                    unregister_all(auth_sdk, user_mocks_subset)
-                        .then(() => done(void 0))
-                        .catch(done)
-                })
+                done));
+
+        after('remove all Artifact objects', (done) =>
+            each(artifact_mocks_subset,
+                (artifact, cb) =>
+                    artifact.createdAt == null ?
+                        cb(void 0)
+                        : artifact_sdk
+                            .remove(artifact.location)
+                            .then(() => cb(void 0))
+                            .catch(cb),
+                done));
+
+        after('unregister all Users', async () =>
+            await unregister_all(auth_sdk, user_mocks_subset)
         );
 
         it('POST should create Categorise object', async () =>

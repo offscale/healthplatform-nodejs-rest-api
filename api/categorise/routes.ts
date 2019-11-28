@@ -8,7 +8,7 @@ import { has_auth } from '../auth/middleware';
 import { CategoriseBodyReq, createCategorise, getManyCategorise, schema } from './sdk';
 
 export const create = (app: restify.Server, namespace: string = '') =>
-    app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(schema, ['id']),
+    app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(schema, ['id', 'username']),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             createCategorise(request as CategoriseBodyReq)
                 .then(categorise => {

@@ -27,10 +27,19 @@ export const createCategoryEnum = (req: CategoryEnumBodyReq) => new Promise<Cate
         // @ts-ignore
         .forEach(k => category_enum[k] = req.body[k]);
 
+    req.params.name = category_enum.name;
+
     req.getOrm().typeorm!.connection
-        .getRepository(CategoryEnum)
-        .save(category_enum)
-        .then(handleCategoryEnum(resolve, reject))
+        .createQueryBuilder()
+        .insert()
+        .into(CategoryEnum)
+        .values([category_enum])
+        .execute()
+        .then(() =>
+            getCategoryEnum(req)
+                .then(resolve)
+                .catch(reject)
+        )
         .catch(e => reject(fmtError(e)));
 });
 
