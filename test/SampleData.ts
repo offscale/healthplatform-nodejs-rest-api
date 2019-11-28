@@ -11,11 +11,11 @@ import { _orms_out } from '../config';
 export interface ISampleData {
     token: string;
 
-    login(user: string, callback: TCallback<HttpError, string>);
+    login(user: string, callback: TCallback<HttpError, AccessTokenType>): void;
 
-    registerLogin(user: string, callback: TCallback<Error | IncomingMessageError | IIncomingMessageF, string>);
+    registerLogin(user: string, callback: TCallback<Error | IncomingMessageError | IIncomingMessageF, string>): void;
 
-    unregister(user: string, callback: TCallback<HttpError, string>);
+    unregister(user: string, callback: TCallback<HttpError, string>): void;
 }
 
 type Callback = (res: IIncomingMessageF) => void;
@@ -24,6 +24,15 @@ type Cb = (err?: IIncomingMessageF, res?: IIncomingMessageF) => void;
 export interface IIncomingMessageF extends IncomingMessage {
     func_name: string;
 }
+
+export const HttpError_from_IncomingMessageF = (incoming: IIncomingMessageF): HttpError => new HttpError({
+    statusCode: incoming.statusCode,
+    cause: `${incoming.method} ${incoming.url}`,
+    code: incoming.statusCode,
+    message: incoming.statusMessage,
+    name: incoming.func_name,
+    context: incoming
+});
 
 const httpF = (method: 'POST' | 'PUT' | 'PATCH' | 'HEAD' | 'GET' | 'DELETE') =>
     (options: RequestOptions,
@@ -80,23 +89,29 @@ export class SampleData implements ISampleData {
         _orms_out.orms_out.waterline!.collections = collections;
     }
 
-    public login(user: string, callback: TCallback<HttpError, string>) {
+    public login(user: string, callback: TCallback<HttpError, AccessTokenType>) {
         httpPOST(
             this.mergeOptions({ path: '/api/auth' }),
-            'login', user, (err, res) => {
-                if (err != null) return callback(err);
-                else if (res.headers == null) return callback(new HttpError('HTTP request failed'));
-                this.token = res.headers['x-access-token'];
+            'login', user, (err: IIncomingMessageF | undefined,
+                            res: IIncomingMessageF | undefined) => {
+                if (err != null) return callback(HttpError_from_IncomingMessageF(err));
+                else if (res == null || res.headers == null) return callback(new HttpError('HTTP request failed'));
+                else if (!res.headers.hasOwnProperty('x-access-token') || res.headers['x-access-token'] == null)
+                    return callback(new HttpError('x-access-token missing from HTTP header'));
+                else
+                    this.token = res.headers['x-access-token'] as string;
                 return callback(err, this.token);
             });
     }
 
     public logout(access_token: AccessTokenType, callback: TCallback<HttpError, string>) {
         const options = this.mergeOptions({ path: '/api/auth' });
-        options.headers['x-access-token'] = access_token || this.token;
-        httpDELETE(options, 'logout', (err, res) => {
-            if (err != null) return callback(err);
-            else if (res.headers == null) return callback(new HttpError('HTTP request failed'));
+        (options as unknown as Response & {headers: {'x-access-token': string}}
+        ).headers['x-access-token'] = access_token || this.token;
+        httpDELETE(options, 'logout', (err: IIncomingMessageF | undefined,
+                                       res: IIncomingMessageF | undefined) => {
+            if (err != null) return callback(HttpError_from_IncomingMessageF(err));
+            else if (res == null || res.headers == null) return callback(new HttpError('HTTP request failed'));
             delete this.token;
             return callback(err, this.token);
         });
@@ -110,38 +125,43 @@ export class SampleData implements ISampleData {
     }
 
     public registerLogin(user: string, callback: TCallback<Error | IncomingMessageError | IIncomingMessageF, string>) {
-        const setToken = (res): true => {
-            if (res[1].headers != null) this.token = res[1].headers['x-access-token'] as string;
+        const setToken = (res: Response[]): true => {
+            if (res[1].headers != null) this.token = res[1].headers.get('x-access-token') as string;
             return true;
         };
 
         this.register(user, (err, res) => {
-            if (err == null) return setToken && callback(void 0, this.token);
+            if (err == null) return setToken(res) && callback(void 0, this.token);
             return this.login(user, (e, _r) => {
                 if (e != null) return callback(e);
-                return setToken && callback(void 0, this.token);
+                return setToken(res) && callback(void 0, this.token);
             });
         });
     }
 
-    public unregister(user: string, callback) {
-        const unregisterUser = (_user: string, callb) => httpDELETE(
+    public unregister(user: string, callback: TCallback<HttpError, AccessTokenType>): void {
+        const unregisterUser = (_user: string, callb: typeof callback) => httpDELETE(
             this.mergeOptions({ path: '/api/user' }),
-            'unregister', _user, (error, result) => {
-                if (error != null) return callb(error);
+            'unregister', _user, (error?: IIncomingMessageF, result?: IIncomingMessageF) => {
+                if (error != null) return callb(HttpError_from_IncomingMessageF(error));
+                else if (result == null) return callb(new HttpError('HTTP request failed'));
                 else if (result.statusCode !== 204)
-                    return callb(new Error(`Expected status code of 204 got ${result.statusCode}`));
+                    return callb(new HttpError(`Expected status code of 204 got ${result.statusCode}`));
                 return callb(error, result.statusMessage);
             }
         );
 
-        this.token ? unregisterUser(user, callback)
-            : this.login(user, (err?: HttpError, _access_token?: AccessTokenType) =>
-                err ? callback() : unregisterUser(user, callback)
-            );
+
+        this.token ?
+            unregisterUser(user, callback)
+            : this.login(user, (err, res) => {
+                err ? callback(void 0) : unregisterUser(user, callback)
+            })
     }
 
-    private mergeOptions(options, body?): {host: string, port: number, headers: {}} & {} {
+    private mergeOptions(options: {},
+                         body?: string | NodeJS.ArrayBufferView | ArrayBuffer | SharedArrayBuffer
+    ): {host: string, port: number, headers: {}} & {} {
         return trivial_merge({
             host: this.uri.host === `[::]:${this.uri.port}` ? 'localhost' :
                 `${this.uri.host!.substr(this.uri.host!.lastIndexOf(this.uri.port!) + this.uri.port!.length)}`,

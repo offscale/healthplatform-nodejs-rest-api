@@ -1,11 +1,10 @@
-import { asyncify, series, waterfall } from 'async';
+import { asyncify, AsyncResultCallback, series, waterfall } from 'async';
 import { default as restify_errors } from 'restify-errors';
 import { JsonSchema } from 'tv4';
 import { Request } from 'restify';
 
 import { fmtError, GenericError, NotFoundError } from '@offscale/custom-restify-errors';
 import { isShallowSubset, removeNulls, unwrapIfOneElement } from '@offscale/nodejs-utils';
-import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { AccessToken } from '../auth/models';
@@ -48,16 +47,19 @@ export class UserConfig implements IUserConfig {
 export const post = (req: UserBodyReq,
                      config: UserConfig): Promise<User> => new Promise<User>((resolve, reject) => {
     const user = new User();
-    Object.keys(req.body).map(k => user[k] = req.body[k]);
+    Object
+        .keys(req.body)
+        // @ts-ignore
+        .forEach(k => user[k] = req.body[k]);
 
     waterfall([
-            cb => cb(config.public_registration ? void 0 : new GenericError({
+            (cb: AsyncResultCallback<void>) => cb(config.public_registration ? void 0 : new GenericError({
                 statusCode: 401,
                 name: 'Registration',
                 message: 'public registration disabled; contact the administrator for an account'
             })),
             // Horrible hack; outside a transaction; TODO: remove
-            cb =>
+            (cb: AsyncResultCallback<void>) =>
                 get(Object.assign(req, { user_id: req.body.email }))
                     .then(() => cb(new GenericError({
                         statusCode: 401,
@@ -76,13 +78,12 @@ export const post = (req: UserBodyReq,
                     .then((_user: User) => cb(void 0, _user))
                     .catch(cb),
                     console.info('post::waterfall::before AccessToken.get, user=', user, ';')*/
-            (_user: User, cb) =>
+            (_user: User, cb: AsyncResultCallback<User>) =>
                 AccessToken
                     .get(req.getOrm().redis!.connection)
-                    .add(_user.email, User.rolesAsStr(_user.roles), 'access',
-                        (err: Error, access_token: AccessTokenType) =>
-                            err != null ? cb(err) : cb(void 0, Object.assign(_user, { access_token }))
-                    )
+                    .add(_user.email, User.rolesAsStr(_user.roles), 'access')
+                    .then(access_token => cb(void 0, Object.assign(_user, { access_token })))
+                    .catch(cb)
         ], (error: Error | null | undefined | restify_errors.RestError, _user: User | undefined) => {
             if (error != null)
                 return reject(fmtError(error) as restify_errors.RestError);

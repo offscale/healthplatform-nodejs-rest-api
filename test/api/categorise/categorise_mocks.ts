@@ -15,7 +15,7 @@ export const categorise_mocks: (users: User[]) => {successes: Categorise[], fail
                 .fill(void 0)
                 .map(() => {
                     const categorise = new Categorise();
-                    categorise.category = faker.name.jobDescriptor();
+                    categorise.category = `${faker.name.jobDescriptor()}_${Math.random()}`;
                     return categorise;
                 })
         }

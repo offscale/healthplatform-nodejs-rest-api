@@ -1,7 +1,7 @@
 // tslint:disable-next-line:no-var-requires
 import { IRoutesMergerConfig } from '@offscale/routes-merger/interfaces';
 
-import { waterfall } from 'async';
+import { AsyncResultCallback, waterfall } from 'async';
 import { createLogger } from 'bunyan';
 import * as path from 'path';
 import { basename } from 'path';
@@ -61,10 +61,11 @@ describe('User::sdk', () => {
     before(done =>
         waterfall([
                 tearDownConnections,
-                cb => typeof AccessToken.reset() === 'undefined' && cb(void 0),
-                cb => ormMw(Object.assign({}, getOrmMwConfig(model_route_to_map(models_and_routes), logger, cb),
-                    { connection_name, logger })),
-                (with_app: IRoutesMergerConfig['with_app'], orms_out: IOrmsOut, cb) => {
+                (cb: AsyncResultCallback<void>) => typeof AccessToken.reset() === 'undefined' && cb(void 0),
+                (cb: (error?: Error, with_app?: IRoutesMergerConfig['with_app'], orms_out?: IOrmsOut) => void) =>
+                    ormMw(Object.assign({}, getOrmMwConfig(model_route_to_map(models_and_routes), logger, cb),
+                        { connection_name, logger })),
+                (with_app: IRoutesMergerConfig['with_app'], orms_out: IOrmsOut, cb: AsyncResultCallback<void>) => {
                     _orms_out.orms_out = orms_out;
                     return cb(void 0);
                 }

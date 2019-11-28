@@ -1,4 +1,3 @@
-import { IUser } from './models.waterline.interfaces.d';
 export declare const hash_password: (record: {
     password: string;
     email?: string | undefined;
@@ -25,7 +24,7 @@ export declare const User: {
             type: string;
             defaultsTo: string;
         };
-        toJSON: () => IUser;
+        toJSON: () => any;
     };
     beforeValidate: (record: {
         password: string;

@@ -181,7 +181,7 @@ export class CategoryEnumTestSDK {
                                 expect(res.body).to.be.an('object');
                                 expect(res.body).to.have.property('category_enums');
                                 expect(res.body.category_enums).to.be.an('array');
-                                res.body.category_enums.map(category_enum =>
+                                res.body.category_enums.forEach((category_enum: CategoryEnum) =>
                                     expect(removeNullProperties(category_enum)).to.be.jsonSchema(category_enum_schema)
                                 );
                             } catch (e) {

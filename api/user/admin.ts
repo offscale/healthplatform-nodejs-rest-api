@@ -2,7 +2,7 @@ import * as restify from 'restify';
 
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { has_body, mk_valid_body_mw } from '@offscale/restify-validators';
-import { fmtError } from '@offscale/custom-restify-errors';
+import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 
 import { has_auth } from '../auth/middleware';
 import { AccessToken } from '../auth/models';
@@ -28,18 +28,23 @@ export const read = (app: restify.Server, namespace: string = '') =>
     app.get(`${namespace}/:email`, has_auth('admin'),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as UserBodyUserReq;
-            user_sdk.get(req)
+            user_sdk
+                .get(req)
                 .then((user: User) =>
                     AccessToken
                         .get(req.getOrm().redis!.connection)
-                        .add(user.email, User.rolesAsStr(user.roles), 'access', (err, at) => {
+                        .add(user.email, User.rolesAsStr(user.roles), 'access')
+                        .then(at => {
                             user.access_token = at;
-                            User._omit.forEach(attr => delete user[attr]);
-                            if (err != null) return next(fmtError(err));
+                            User._omit
+                                // @ts-ignore
+                                .forEach(attr => delete user[attr]);
+                            if (at == null) return next(new NotFoundError('Access-Token'));
                             res.setHeader('X-Access-Token', at);
                             res.json(201, user);
                             return next();
                         })
+                        .catch(err => next(fmtError(err)))
                 )
                 .catch(next);
         }

@@ -1,4 +1,4 @@
-import { each, map, waterfall } from 'async';
+import { AsyncResultCallback, each, map, waterfall } from 'async';
 import { createLogger } from 'bunyan';
 import * as path from 'path';
 import { basename } from 'path';
@@ -20,6 +20,7 @@ import { user_mocks } from '../user/user_mocks';
 import { UserTestSDK } from '../user/user_test_sdk';
 import { CategoriseTestSDK } from './categorise_test_sdk';
 import { categorise_mocks } from './categorise_mocks';
+import { TApp } from '@offscale/routes-merger/interfaces';
 
 
 const models_and_routes: IModelRoute = {
@@ -49,12 +50,13 @@ describe('Categorise::routes', () => {
     before(done =>
         waterfall([
                 tearDownConnections,
-                cb => typeof AccessToken.reset() === 'undefined' && cb(void 0),
-                cb => setupOrmApp(model_route_to_map(models_and_routes), { logger, connection_name },
-                    { skip_start_app: true, app_name: tapp_name, logger },
-                    cb
-                ),
-                (_app: Server, orms_out: IOrmsOut, cb) => {
+                (cb: AsyncResultCallback<void>) => typeof AccessToken.reset() === 'undefined' && cb(void 0),
+                (cb: (error: Error, _app?: TApp, orms_out?: IOrmsOut) => void) =>
+                    setupOrmApp(model_route_to_map(models_and_routes), { connection_name, logger },
+                        { skip_start_app: true, app_name: tapp_name, logger },
+                        cb
+                    ),
+                (_app: Server, orms_out: IOrmsOut, cb: AsyncResultCallback<void>) => {
                     app = _app;
                     _orms_out.orms_out = orms_out;
 

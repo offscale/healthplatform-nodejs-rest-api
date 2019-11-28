@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { basename } from 'path';
 
-import { asyncify, map, waterfall } from 'async';
+import { asyncify, AsyncResultCallback, map, waterfall } from 'async';
 import { createLogger } from 'bunyan';
 import { expect } from 'chai';
 import { Server } from 'restify';
@@ -18,6 +18,7 @@ import { AuthTestSDK } from '../auth/auth_test_sdk';
 import { closeApp, tearDownConnections, unregister_all } from '../../shared_tests';
 import { user_mocks } from './user_mocks';
 import { UserTestSDK } from './user_test_sdk';
+import { TApp } from '@offscale/routes-merger/interfaces';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -42,13 +43,14 @@ describe('User::routes', () => {
     before('app & db', done => {
         waterfall([
                 tearDownConnections,
-                cb => typeof AccessToken.reset() === 'undefined' && cb(void 0),
-                cb => setupOrmApp(model_route_to_map(models_and_routes),
+                (cb: AsyncResultCallback<void>) => typeof AccessToken.reset() === 'undefined' && cb(void 0),
+                (cb: (error: Error, _app?: TApp, orms_out?: IOrmsOut) => void) =>
+                    setupOrmApp(model_route_to_map(models_and_routes),
                     { logger, connection_name },
                     { skip_start_app: true, app_name: tapp_name, logger },
                     cb
                 ),
-                (_app: Server, orms_out: IOrmsOut, cb) => {
+                (_app: Server, orms_out: IOrmsOut, cb: AsyncResultCallback<void>) => {
                     app = _app;
                     _orms_out.orms_out = orms_out;
 
@@ -57,7 +59,7 @@ describe('User::routes', () => {
 
                     return cb(void 0);
                 },
-                cb => unregister_all(auth_sdk, mocks).then(() => cb(void 0)).catch(cb)
+                (cb: AsyncResultCallback<void>) => unregister_all(auth_sdk, mocks).then(() => cb(void 0)).catch(cb)
             ],
             done
         );

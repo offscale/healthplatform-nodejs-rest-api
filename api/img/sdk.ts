@@ -11,7 +11,8 @@ export const schema: JsonSchema = require('../../test/api/img/schema');
 
 export type ImgBodyReq = Request & IOrmReq & {body?: Img, user_id?: string};
 
-const handleImg = (resolve, reject) => (img?: Img) =>
+const handleImg = (resolve: (img: Img) => void,
+                   reject: (error: Error) => void) => (img?: Img) =>
     img == null ?
         reject(new NotFoundError('Img'))
         : resolve(img);
@@ -21,7 +22,10 @@ export const createImg = (req: ImgBodyReq) => new Promise<Img>((resolve, reject)
         return reject(new NotFoundError('req.body == null'));
 
     const img = new Img();
-    Object.keys(req.body).map(k => img[k] = req.body[k]);
+    Object
+        .keys(req.body)
+        // @ts-ignore
+        .forEach(k => img[k] = req.body[k]);
 
     req.getOrm().typeorm!.connection
         .getRepository(Img)
@@ -68,7 +72,10 @@ export const updateImg = (req: ImgBodyReq) => new Promise<Img>((resolve, reject)
     ImgR.findOne(req.params.id)
         .then((img?: Img) => {
             if (img == null) return createImg(req);
-            Object.keys(req.body).map(k => img[k] = req.body[k]);
+            Object
+                .keys(req.body)
+                // @ts-ignore
+                .forEach(k => img[k] = req.body[k]);
             ImgR
                 .save(img)
                 .then(handleImg(resolve, reject))

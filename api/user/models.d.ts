@@ -1,5 +1,5 @@
 import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
-export declare const hash_password: (password: string, callback: any) => void;
+export declare const hash_password: (password: string, callback: (e?: Error | undefined, hash?: string | undefined) => void) => void;
 export declare class User {
     static _omit: string[];
     email: string;

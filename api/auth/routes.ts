@@ -1,5 +1,5 @@
 import * as argon2 from 'argon2';
-import { waterfall } from 'async';
+import { AsyncResultCallback, waterfall } from 'async';
 import * as restify from 'restify';
 import { JsonSchema } from 'tv4';
 
@@ -15,12 +15,13 @@ import { AccessToken } from './models';
 /* tslint:disable:no-var-requires */
 const user_schema: JsonSchema = require('./../../test/api/user/schema');
 
+
 export const login = (app: restify.Server, namespace: string = ''): void => {
     app.post(namespace, has_body, mk_valid_body_mw(user_schema),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
             const req = request as unknown as IOrmReq & restify.Request;
             waterfall([
-                cb => req.getOrm().typeorm!.connection
+                (cb: AsyncResultCallback<User>) => req.getOrm().typeorm!.connection
                     .getRepository(User)
                     .findOne({
                         select: ['password', 'email', 'roles'],
@@ -31,18 +32,22 @@ export const login = (app: restify.Server, namespace: string = ''): void => {
                         return cb(void 0, user);
                     })
                     .catch(cb),
-                (user: User, cb) =>
+                (user: User, cb: AsyncResultCallback<User>) =>
                     argon2
                         .verify(user.password, req.body.password)
                         .then(valid => cb(valid ? null : new AuthError('Password invalid'), user)),
-                (user: User, cb) =>
+                (user: User, cb: AsyncResultCallback<User>) =>
                     AccessToken
                         .get(req.getOrm().redis!.connection)
-                        .add(user.email, User.rolesAsStr(user.roles), 'access', (err, at) => {
+                        .add(user.email, User.rolesAsStr(user.roles), 'access')
+                        .then(at => {
                             user.access_token = at;
-                            User._omit.forEach(attr => delete user[attr]);
-                            return cb(err, user);
+                            User._omit
+                                // @ts-ignore
+                                .forEach(attr => delete user[attr]);
+                            return cb(void 0, user);
                         })
+                        .catch(cb)
             ], (error: any, user: User | undefined) => {
                 if (error != null) return next(fmtError(error));
                 else if (user == null) return next(new NotFoundError('User'));

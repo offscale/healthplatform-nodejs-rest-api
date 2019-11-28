@@ -11,7 +11,8 @@ export const schema: JsonSchema = require('./../../test/api/categorise/schema');
 
 export type CategoriseBodyReq = Request & IOrmReq & {body?: Categorise, user_id?: string};
 
-const handleCategorise = (resolve, reject) => (categorise?: Categorise) =>
+const handleCategorise = (resolve: (categorise: Categorise) => void,
+                          reject: (error: Error) => void) => (categorise?: Categorise) =>
     categorise == null ?
         reject(new NotFoundError('Categorise'))
         : resolve(categorise);
@@ -21,7 +22,10 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
         return reject(new NotFoundError('req.body == null'));
 
     const categorise = new Categorise();
-    Object.keys(req.body).map(k => categorise[k] = req.body[k]);
+    Object
+        .keys(req.body)
+        // @ts-ignore
+        .forEach(k => categorise[k] = req.body[k]);
 
     // TODO: Is admin check here
     categorise.username = req.user_id!;
@@ -71,7 +75,10 @@ export const updateCategorise = (req: CategoriseBodyReq) => new Promise<Categori
     CategoriseR.findOne(req.params.id)
         .then((categorise?: Categorise) => {
             if (categorise == null) return createCategorise(req);
-            Object.keys(req.body).map(k => categorise[k] = req.body[k]);
+            Object
+                .keys(req.body)
+                // @ts-ignore
+                .forEach(k => categorise[k] = req.body[k]);
             CategoriseR
                 .save(categorise)
                 .then(handleCategorise(resolve, reject))

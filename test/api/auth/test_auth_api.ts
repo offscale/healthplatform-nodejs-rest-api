@@ -1,4 +1,4 @@
-import { waterfall } from 'async';
+import { AsyncResultCallback, waterfall } from 'async';
 import { createLogger } from 'bunyan';
 import * as path from 'path';
 import { basename } from 'path';
@@ -15,6 +15,7 @@ import { all_models_and_routes_as_mr, setupOrmApp } from '../../../main';
 import { user_mocks } from '../user/user_mocks';
 import { closeApp, tearDownConnections, unregister_all } from '../../shared_tests';
 import { AuthTestSDK } from './auth_test_sdk';
+import { TApp } from '@offscale/routes-merger/interfaces';
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
@@ -37,12 +38,13 @@ describe('Auth::routes', () => {
     before(done =>
         waterfall([
                 tearDownConnections,
-                cb => typeof AccessToken.reset() === 'undefined' && cb(void 0),
-                cb => setupOrmApp(model_route_to_map(models_and_routes), { connection_name, logger },
-                    { skip_start_app: true, app_name: tapp_name, logger },
-                    cb
-                ),
-                (_app: Server, orms_out: IOrmsOut, cb) => {
+                (cb: AsyncResultCallback<void>) => typeof AccessToken.reset() === 'undefined' && cb(void 0),
+                (cb: (error: Error, _app?: TApp, orms_out?: IOrmsOut) => void) =>
+                    setupOrmApp(model_route_to_map(models_and_routes), { connection_name, logger },
+                        { skip_start_app: true, app_name: tapp_name, logger },
+                        cb
+                    ),
+                (_app: Server, orms_out: IOrmsOut, cb: AsyncResultCallback<void>) => {
                     _orms_out.orms_out = orms_out;
 
                     sdk = new AuthTestSDK(_app);

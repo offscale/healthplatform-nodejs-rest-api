@@ -2,7 +2,6 @@ import { Response } from 'supertest';
 import { Server } from 'restify';
 import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
 import { CategoryEnum } from '../../../api/category_enum/models';
-
 export declare class CategoryEnumTestSDK {
     app: Server;
     constructor(app: Server);

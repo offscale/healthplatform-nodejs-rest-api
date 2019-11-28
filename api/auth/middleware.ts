@@ -22,7 +22,8 @@ export const has_auth = (scope = 'access') =>
 
         if (access_token.indexOf(scope) < 0)
             return next(new AuthError(`${scope} required to view; ` +
-                `you only have ${access_token.slice(access_token.lastIndexOf(':'))}`));
+                `you only have ${access_token.slice(access_token.lastIndexOf(':'))}`)
+            );
 
         const body_id = req.params.email || req.body && (req.body.user_id || req.body.email);
 

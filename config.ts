@@ -69,10 +69,12 @@ export const waterline_config /*: ConfigOptions*/ = Object.freeze({
 // ONLY USE `_orms_out` FOR TESTS!
 export const _orms_out: {orms_out: IOrmsOut} = { orms_out: undefined as any };
 
+export type OrmMwConfigCb = (err: Error | undefined,
+                             with_app?: IRoutesMergerConfig['with_app'],
+                             orms_out?: IOrmsOut) => void;
+
 export const getOrmMwConfig = (models: Map<string, any>, logger: Logger,
-                               cb: (err: Error | undefined,
-                                    with_app?: IRoutesMergerConfig['with_app'],
-                                    orms_out?: IOrmsOut) => void): IOrmMwConfig => ({
+                               cb: OrmMwConfigCb): IOrmMwConfig => ({
     models, logger,
     orms_in: {
         redis: {
@@ -103,7 +105,7 @@ export const getOrmMwConfig = (models: Map<string, any>, logger: Logger,
         }
         _orms_out.orms_out = orms_out!;
         return cb(void 0, (_app: TApp) => {
-            if (_app['use'])
+            if ((_app as restify.Server).use)
                 (_app as restify.Server).use(mw as RestifyRequestHandler);
             // import { Next, Server } from 'restify';
             // import { WaterlineError } from '@offscale/custom-restify-errors';

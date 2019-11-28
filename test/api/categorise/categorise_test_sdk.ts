@@ -181,7 +181,7 @@ export class CategoriseTestSDK {
                                 expect(res.body).to.be.an('object');
                                 expect(res.body).to.have.property('categorises');
                                 expect(res.body.categorises).to.be.an('array');
-                                res.body.categorises.map(categorise =>
+                                res.body.categorises.map((categorise: Categorise) =>
                                     expect(removeNullProperties(categorise)).to.be.jsonSchema(categorise_schema)
                                 );
                             } catch (e) {

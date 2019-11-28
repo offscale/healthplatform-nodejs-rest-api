@@ -11,7 +11,8 @@ export const schema: JsonSchema = require('../../test/api/category_enum/schema')
 
 export type CategoryEnumBodyReq = Request & IOrmReq & {body?: CategoryEnum, user_id?: string};
 
-const handleCategoryEnum = (resolve, reject) => (category_enum?: CategoryEnum) =>
+const handleCategoryEnum = (resolve: (category_enum: CategoryEnum) => void,
+                            reject: (error: Error) => void) => (category_enum?: CategoryEnum) =>
     category_enum == null ?
         reject(new NotFoundError('CategoryEnum'))
         : resolve(category_enum);
@@ -21,7 +22,10 @@ export const createCategoryEnum = (req: CategoryEnumBodyReq) => new Promise<Cate
         return reject(new NotFoundError('req.body == null'));
 
     const category_enum = new CategoryEnum();
-    Object.keys(req.body).map(k => category_enum[k] = req.body[k]);
+    Object
+        .keys(req.body)
+        // @ts-ignore
+        .forEach(k => category_enum[k] = req.body[k]);
 
     req.getOrm().typeorm!.connection
         .getRepository(CategoryEnum)
@@ -68,7 +72,10 @@ export const updateCategoryEnum = (req: CategoryEnumBodyReq) => new Promise<Cate
     CategoryEnumR.findOne(req.params.name)
         .then((category_enum?: CategoryEnum) => {
             if (category_enum == null) return createCategoryEnum(req);
-            Object.keys(req.body).map(k => category_enum[k] = req.body[k]);
+            Object
+                .keys(req.body)
+                // @ts-ignore
+                .forEach(k => category_enum[k] = req.body[k]);
             CategoryEnumR
                 .save(category_enum)
                 .then(handleCategoryEnum(resolve, reject))

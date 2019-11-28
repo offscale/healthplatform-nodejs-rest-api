@@ -14,7 +14,8 @@ export class AccessToken {
 
     public static reset() {
         accessToken = undefined;
-        delete global['accessToken'];
+        if (global.hasOwnProperty('accessToken'))
+            delete (global as NodeJS.Global & {accessToken: AccessToken | undefined})['accessToken'];
     }
 
     public static get(cursor: Redis): AccessToken {
@@ -25,11 +26,13 @@ export class AccessToken {
 
     public findOne(access_token: AccessTokenType): Promise<string> {
         return new Promise<string>((resolve, reject) =>
-            this.redis.get(access_token, (err: Error, user_id: string | null) => {
-                if (err != null) return reject(err);
-                else if (user_id == null) return reject(new AuthError('Nothing associated with that access token'));
-                return resolve(user_id);
-            })
+            this.redis
+                .get(access_token)
+                .then((user_id: string | null) => {
+                    if (user_id == null) return reject(new AuthError('Nothing associated with that access token'));
+                    return resolve(user_id);
+                })
+                .catch(reject)
         );
     }
 
@@ -40,29 +43,37 @@ export class AccessToken {
     public logout(arg: LogoutArg, callback: (err?: Error | RestError) => void) {
         if (arg.user_id)
             // TODO: Rewrite this in Lua [maybe?]
-            this.redis.smembers(arg.user_id, (err: Error, access_tokens: string[]) => {
-                if (err != null) return callback(err);
-                (this['redis'] as any)
-                    ['multi']()
-                    ['del'](...access_tokens)
-                    ['exec'](errors =>
-                    callback(errors != null && errors['length'] ? new GenericError({
-                        statusCode: 400,
-                        name: 'LogoutErrors',
-                        message: JSON.stringify(errors)
-                    }) : void 0)
-                );
-            });
+            this.redis
+                .smembers(arg.user_id)
+                .then((access_tokens: string[]) => {
+                    const pipeline = this.redis.pipeline();
+                    for (const at of access_tokens)
+                        pipeline.del(at);
+                    pipeline
+                        .exec()
+                        .then(() => callback(void 0))
+                        .catch(errors =>
+                            callback(new GenericError({
+                                statusCode: 400,
+                                name: 'LogoutErrors',
+                                message: JSON.stringify(errors)
+                            }))
+                        );
+                })
+                .catch(callback);
         else if (arg.access_token)
-            this.redis.get(arg.access_token, (err, user_id) => {
-                if (err != null) return callback(err);
-                else if (user_id == null) return callback(new GenericError({
-                    statusCode: 410,
-                    name: 'AlreadyDone',
-                    message: 'User already logged out'
-                }));
-                return this.logout({ user_id }, callback);
-            });
+            this.redis
+                .get(arg.access_token)
+                .then((user_id: string | null) =>
+                    user_id == null ?
+                        callback(new GenericError({
+                            statusCode: 410,
+                            name: 'AlreadyDone',
+                            message: 'User already logged out'
+                        }))
+                        : this.logout({ user_id }, callback)
+                )
+                .catch(callback);
         else return callback(new GenericError({
                 statusCode: 400,
                 name: 'ConstraintError',
@@ -70,12 +81,15 @@ export class AccessToken {
             }));
     }
 
-    public add(user_id: string, roles: string, scope: 'access',
-               callback: (err: Error, access_token: AccessTokenType) => void) {
-        const new_key: string = `${roles}::${scope}::${uuid_v4()}`;
-        const t = this.redis.multi();
-        t.set(new_key, user_id);
-        t.sadd(user_id, new_key);
-        t.exec(err => callback(err, new_key));
+    public add(user_id: string, roles: string, scope: 'access'): Promise<AccessTokenType> {
+        return new Promise<AccessTokenType>((resolve, reject) => {
+            const new_key: AccessTokenType = `${roles}::${scope}::${uuid_v4()}`;
+            this.redis.multi()
+                .set(new_key, user_id)
+                .sadd(user_id, new_key)
+                .exec()
+                .then(() => resolve(new_key))
+                .catch(reject);
+        });
     }
 }

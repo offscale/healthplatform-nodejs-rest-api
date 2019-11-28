@@ -181,7 +181,7 @@ export class ImgTestSDK {
                                 expect(res.body).to.be.an('object');
                                 expect(res.body).to.have.property('imgs');
                                 expect(res.body.imgs).to.be.an('array');
-                                res.body.imgs.map(img =>
+                                res.body.imgs.forEach((img: Img) =>
                                     expect(removeNullProperties(img)).to.be.jsonSchema(img_schema)
                                 );
                             } catch (e) {

@@ -4,12 +4,13 @@ import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, PrimaryCo
 import { argon2_options } from './utils';
 import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
 
-export const hash_password = (password: string, callback): void => {
-    password.startsWith('$argon2') ? callback(void 0, password)
-        : argon2.hash(password, argon2_options).then(hashed =>
-            callback(void 0, hashed)
-        ).catch(callback);
-};
+export const hash_password = (password: string, callback: (e?: Error, hash?: string) => void): void =>
+    (password.startsWith('$argon2') ?
+        callback(void 0, password)
+        : argon2
+            .hash(password, argon2_options)
+            .then(hashed => callback(void 0, hashed))
+            .catch(callback)) && undefined || undefined;
 
 @Entity('user_tbl')
 export class User {
