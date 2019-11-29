@@ -20,10 +20,12 @@ export class Categorise {
     @PrimaryGeneratedColumn()
     public id!: number;
 
-
     @ManyToOne(type => Artifact)
     @JoinColumn({ name: 'artifact_location' })
     public artifact!: Artifact;
+
+    @Column()
+    public artifact_location!: Artifact['location'];
 
     @Column('varchar', { nullable: false })
     public category!: string;

@@ -50,7 +50,7 @@ export const getCategorise = (req: Request & IOrmReq) => new Promise<Categorise>
         reject(new NotFoundError('req.params.id'))
         : req.getOrm().typeorm!.connection
             .getRepository(Categorise)
-            .findOne(req.params.id)
+            .findOne(req.params.id, { relations: ['artifact'] })
             .then(handleCategorise(resolve, reject))
             .catch(e => reject(fmtError(e)))
 );
@@ -59,6 +59,10 @@ export const getManyCategorise = (req: Request & IOrmReq) => new Promise<Categor
     req.getOrm().typeorm!.connection
         .getRepository(Categorise)
         .find({
+            select: req.getOrm().typeorm!.connection
+                .getMetadata(Categorise)
+                .columns
+                .map(cm => cm.propertyAliasName) as any,
             order: {
                 updatedAt: 'ASC'
             }
