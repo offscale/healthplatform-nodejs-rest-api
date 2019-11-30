@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 
 import { Artifact } from '../artifact/models';
+import { CategoryEnum } from '../category_enum/models';
 
 
 @Entity('categorise_tbl')
@@ -26,6 +27,13 @@ export class Categorise {
 
     @Column()
     public artifact_location!: Artifact['location'];
+
+    @ManyToOne(type => CategoryEnum)
+    @JoinColumn({ name: 'category_enum_name' })
+    public categoryEnum!: CategoryEnum;
+
+    @Column()
+    public category_enum_name!: CategoryEnum['name'];
 
     @Column('varchar', { nullable: false })
     public category!: string;

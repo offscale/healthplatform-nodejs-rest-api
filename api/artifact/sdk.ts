@@ -42,15 +42,35 @@ export const createArtifact = (req: ArtifactBodyReq) => new Promise<Artifact>((r
         .catch(e => reject(fmtError(e)));
 });
 
-export const getArtifact = (req: Request & IOrmReq) => new Promise<Artifact>((resolve, reject) =>
-    req.params.location == null ?
-        reject(new NotFoundError('req.params.location'))
-        : req.getOrm().typeorm!.connection
-            .getRepository(Artifact)
-            .findOne({ where: { location: req.params.location } })
-            .then(handleArtifact(resolve, reject))
-            .catch(e => reject(fmtError(e)))
-);
+export const getArtifact: (req: (Request & IOrmReq)) => Promise<Artifact> = (req: Request & IOrmReq) =>
+    new Promise<Artifact>((resolve, reject) =>
+        req.params.location == null ?
+            reject(new NotFoundError('req.params.location'))
+            : console.info(req.params.attempts, 'req.params.location:', req.params.location, ';') as any ||  req.getOrm().typeorm!.connection
+                .getRepository(Artifact)
+                .findOne({ where: { location: req.params.location } })
+                .then((artifact?: Artifact) => {
+                    if (artifact == null) {
+                        req.params.location = encodeURIComponent(req.params.location);
+                        if (req.params.hasOwnProperty('attempts')) {
+                            req.params.attempts++;
+                            if (req.params.attempts > 1)
+                                return reject(new NotFoundError('Artifact'));
+                        } else
+                            req.params.attempts = 0;
+
+                        console.info('req.params.attempts:', req.params.attempts, ';');
+
+                        return getArtifact(req)
+                            .then((_artifact?: Artifact) => _artifact == null ?
+                                reject(new NotFoundError('Artifact'))
+                                : resolve(_artifact))
+                            .catch(reject);
+                    }
+                    return resolve(artifact);
+                })
+                .catch(e => reject(fmtError(e)))
+    );
 
 export const getManyArtifact = (req: Request & IOrmReq) => new Promise<Artifact[]>((resolve, reject) =>
     req.getOrm().typeorm!.connection
@@ -61,9 +81,7 @@ export const getManyArtifact = (req: Request & IOrmReq) => new Promise<Artifact[
             }
         })
         .then((artifacts?: Artifact[]) =>
-            artifacts == null || !artifacts.length ?
-                reject(new NotFoundError('Artifact'))
-                : resolve(artifacts)
+            resolve(artifacts == null ? [] : artifacts)
         )
         .catch(e => reject(fmtError(e)))
 );

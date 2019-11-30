@@ -7,6 +7,9 @@
     "artifact_location": {
       "type": "string"
     },
+    "category_enum_name": {
+      "type": "string"
+    },
     "category": {
       "type": "string"
     },

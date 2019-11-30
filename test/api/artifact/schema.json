@@ -4,11 +4,18 @@
     "location": {
       "type": "string"
     },
+    "mimeType": {
+      "type": "string"
+    },
+    "contentType": {
+      "type": "string"
+    },
     "meta": {
       "type": "string"
     }
   },
   "required": [
-    "location"
+    "location",
+    "mimeType"
   ]
 }

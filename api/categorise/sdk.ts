@@ -68,9 +68,7 @@ export const getManyCategorise = (req: Request & IOrmReq) => new Promise<Categor
             }
         })
         .then((categorises?: Categorise[]) =>
-            categorises == null || !categorises.length ?
-                reject(new NotFoundError('Categorise'))
-                : resolve(categorises)
+            resolve(categorises == null ? [] : categorises)
         )
         .catch(e => reject(fmtError(e)))
 );

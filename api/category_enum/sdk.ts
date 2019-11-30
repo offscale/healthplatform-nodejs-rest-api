@@ -62,9 +62,7 @@ export const getManyCategoryEnum = (req: Request & IOrmReq) => new Promise<Categ
             }
         })
         .then((category_enums?: CategoryEnum[]) =>
-            category_enums == null || !category_enums.length ?
-                reject(new NotFoundError('CategoryEnum'))
-                : resolve(category_enums)
+            resolve(category_enums == null ? [] : category_enums)
         )
         .catch(e => reject(fmtError(e)))
 );

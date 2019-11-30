@@ -8,6 +8,12 @@ export class Artifact {
     @PrimaryColumn({ type: 'varchar', nullable: false, unique: true })
     public location!: string;
 
+    @Column({ type: 'varchar', nullable: false, default: 'x-www-form-urlencoded' })
+    public mimeType!: string;
+
+    @Column({type: 'varchar', nullable: false})
+    public contentType!: string;
+
     @Column({ type: 'varchar', nullable: true })
     public meta?: string;
 
