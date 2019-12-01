@@ -31,4 +31,3 @@ export const getAll = (app: restify.Server, namespace: string = '') =>
                 .catch(next)
         }
     );
-
