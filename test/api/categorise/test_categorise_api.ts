@@ -101,7 +101,8 @@ describe('Categorise::routes', () => {
                 artifact_sdk
                     .post(artifact_mocks_subset[idx])
                     .then(created_artifact_response => {
-                        artifact_mocks_subset[idx] = mocks[idx].artifact = created_artifact_response.body;
+                        artifact_mocks_subset[idx] = mocks[
+                            idx].artifactLocation = created_artifact_response.body.location;
                         return cb(void 0);
                     })
                     .catch(cb),

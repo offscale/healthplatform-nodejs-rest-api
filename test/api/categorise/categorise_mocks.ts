@@ -23,7 +23,7 @@ export const categorise_mocks: (users: User[],
 
                     categorise.category = `${faker.name.jobDescriptor()}_${Math.random()}`;
                     categorise.username = users[idx].email;
-                    categorise.artifact = artifacts[idx];
+                    categorise.artifactLocation = artifacts[idx].location;
 
                     return categorise;
                 })

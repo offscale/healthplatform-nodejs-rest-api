@@ -60,11 +60,11 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
                 return req.getOrm().typeorm!.connection
                     .getRepository(Categorise)
                     .find({
-                        select: ['id'],
+                        select: ['id' /*, 'artifactLocation', 'categoryEnumName', 'username'*/],
                         where: [
                             {
-                                categoryEnumName: categorise.categoryEnumName,
-                                username: categorise.username
+                                username: categorise.username,
+                                categoryEnumName: categorise.categoryEnumName
                             }
                         ],
                         take: 1
@@ -83,14 +83,21 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
         });
 });
 
-export const getCategorise = (req: Request & IOrmReq) => new Promise<Categorise>((resolve, reject) =>
-    req.params.id == null ?
-        reject(new NotFoundError('req.params.id'))
-        : req.getOrm().typeorm!.connection
-            .getRepository(Categorise)
-            .findOne(req.params.id, { relations: ['artifact'] })
-            .then(handleCategorise(resolve, reject))
-            .catch(e => reject(fmtError(e)))
+export const getCategorise = (req: Request & IOrmReq & {user_id?: string}) => new Promise<Categorise>(
+    (resolve, reject) =>
+        req.params.id == null ?
+            reject(new NotFoundError('req.params.id'))
+            : req.getOrm().typeorm!.connection
+                .getRepository(Categorise)
+                .findOne({
+                    relations: ['artifactLocation'],
+                    where: {
+                        id: req.params.id,
+                        username: req.user_id!
+                    }
+                })
+                .then(handleCategorise(resolve, reject))
+                .catch(e => reject(fmtError(e)))
 );
 
 export const getManyCategorise = (req: Request & IOrmReq) => new Promise<Categorise[]>((resolve, reject) =>
@@ -120,7 +127,10 @@ export const updateCategorise = (req: CategoriseBodyReq) => new Promise<Categori
     else if (req.body == null)
         return reject(new NotFoundError('req.body == null'));
 
-    CategoriseR.findOne(req.params.id)
+    CategoriseR.findOne({
+        id: req.params.id,
+        username: req.user_id!
+    })
         .then((categorise?: Categorise) => {
             if (categorise == null) return createCategorise(req);
             Object
@@ -143,22 +153,28 @@ export const removeCategorise = (req: Request & IOrmReq & {user_id?: string}) =>
         return reject(new NotFoundError('req.params.id'));
 
     CategoriseR
-        .findOne(req.params.id)
+        .findOne({
+            id: req.params.id,
+            username: req.user_id!
+        })
         .then((categorise?: Categorise) => {
-            if (categorise == null) {
+            if (categorise == null)
                 return resolve(void 0);
-            } else if (categorise.username !== req.user_id) {
+            else if (categorise.username !== req.user_id)
                 return reject(new GenericError({
                     statusCode: 401,
                     name: 'WrongUser',
                     message: `Actual categorise.username !== ${req.user_id}`
                 }));
-            } else
+            else
                 req.getOrm().typeorm!.connection
                     .createQueryBuilder()
                     .delete()
                     .from(Categorise)
-                    .where('id = :id', { id: req.params.id })
+                    .where('id = :id AND username = :username', {
+                        id: req.params.id,
+                        username: req.user_id!
+                    })
                     .execute()
                     .then(() => resolve(void 0))
                     .catch(e => reject(fmtError(e)));

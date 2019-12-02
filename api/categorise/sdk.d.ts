@@ -8,7 +8,9 @@ export declare type CategoriseBodyReq = Request & IOrmReq & {
     user_id?: string;
 };
 export declare const createCategorise: (req: CategoriseBodyReq) => Promise<Categorise>;
-export declare const getCategorise: (req: Request & IOrmReq) => Promise<Categorise>;
+export declare const getCategorise: (req: Request & IOrmReq & {
+    user_id?: string | undefined;
+}) => Promise<Categorise>;
 export declare const getManyCategorise: (req: Request & IOrmReq) => Promise<Categorise[]>;
 export declare const updateCategorise: (req: CategoriseBodyReq) => Promise<Categorise>;
 export declare const removeCategorise: (req: Request & IOrmReq & {
