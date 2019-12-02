@@ -63,7 +63,6 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
                         select: ['id'],
                         where: [
                             {
-                                category: categorise.category,
                                 categoryEnumName: categorise.categoryEnumName,
                                 username: categorise.username
                             }

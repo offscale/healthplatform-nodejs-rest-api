@@ -14,7 +14,7 @@ import { CategoryEnum } from '../category_enum/models';
 
 
 @Entity('categorise_tbl')
-@Unique('UQ_CAT_NAMES', ['artifact', 'category', 'username'])
+@Unique('UQ_CAT_NAMES', ['artifactLocation', 'categoryEnumName', 'username'])
 export class Categorise {
     static _omit: string[] = [];
 
