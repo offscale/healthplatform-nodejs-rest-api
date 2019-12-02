@@ -4,10 +4,10 @@
     "id": {
       "type": "number"
     },
-    "artifact_location": {
+    "artifactLocation": {
       "type": "string"
     },
-    "category_enum_name": {
+    "categoryEnumName": {
       "type": "string"
     },
     "category": {

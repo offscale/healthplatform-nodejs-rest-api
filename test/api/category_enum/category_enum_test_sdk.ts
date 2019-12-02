@@ -36,17 +36,17 @@ export class CategoryEnumTestSDK {
         this._access_token = new_access_token;
     }
 
-    public get(category_enum_name: CategoryEnum['name']): Promise<Response> {
+    public get(categoryEnumName: CategoryEnum['name']): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            if (category_enum_name == null)
-                return reject(new TypeError('`category_enum_name` argument to `get` must be defined'));
+            if (categoryEnumName == null)
+                return reject(new TypeError('`categoryEnumName` argument to `get` must be defined'));
 
             expect(category_enum_route.get).to.be.an.instanceOf(Function);
 
             testObjectValidation(this)
                 .then(() => {
                         supertest(this.app)
-                            .get(`/api/category_enum/${category_enum_name}`)
+                            .get(`/api/category_enum/${categoryEnumName}`)
                             .set('Accept', 'application/json')
                             .set('X-Access-Token', this.access_token)
                             .expect('Content-Type', /json/)
@@ -102,7 +102,7 @@ export class CategoryEnumTestSDK {
         });
     }
 
-    public update(category_enum_name: CategoryEnum['name'], category_enum: Partial<CategoryEnum>): Promise<Response> {
+    public update(categoryEnumName: CategoryEnum['name'], category_enum: Partial<CategoryEnum>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (category_enum == null)
                 return reject(new TypeError('`category_enum` argument to `update` must be defined'));
@@ -112,7 +112,7 @@ export class CategoryEnumTestSDK {
             testObjectValidation(this)
                 .then(() =>
                     supertest(this.app)
-                        .put(`/api/category_enum/${category_enum_name}`)
+                        .put(`/api/category_enum/${categoryEnumName}`)
                         .set('Accept', 'application/json')
                         .set('X-Access-Token', this.access_token)
                         .send(category_enum)
@@ -135,17 +135,17 @@ export class CategoryEnumTestSDK {
         });
     }
 
-    public remove(category_enum_name: CategoryEnum['name']): Promise<Response> {
+    public remove(categoryEnumName: CategoryEnum['name']): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            if (category_enum_name == null)
-                return reject(new TypeError('`category_enum_name` argument to `update` must be defined'));
+            if (categoryEnumName == null)
+                return reject(new TypeError('`categoryEnumName` argument to `update` must be defined'));
 
             expect(category_enum_route.remove).to.be.an.instanceOf(Function);
 
             testObjectValidation(this)
                 .then(() => {
                     supertest(this.app)
-                        .delete(`/api/category_enum/${category_enum_name}`)
+                        .delete(`/api/category_enum/${categoryEnumName}`)
                         .set('X-Access-Token', this.access_token)
                         // .expect('Content-Type', /json/)
                         .end((err, res: Response) => {

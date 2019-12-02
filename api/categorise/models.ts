@@ -22,18 +22,18 @@ export class Categorise {
     public id!: number;
 
     @ManyToOne(type => Artifact)
-    @JoinColumn({ name: 'artifact_location' })
+    @JoinColumn({ name: 'artifactLocation' })
     public artifact!: Artifact;
 
     @Column()
-    public artifact_location!: Artifact['location'];
+    public artifactLocation!: Artifact['location'];
 
     @ManyToOne(type => CategoryEnum)
-    @JoinColumn({ name: 'category_enum_name' })
+    @JoinColumn({ name: 'categoryEnumName' })
     public categoryEnum!: CategoryEnum;
 
     @Column()
-    public category_enum_name!: CategoryEnum['name'];
+    public categoryEnumName!: CategoryEnum['name'];
 
     @Column('varchar', { nullable: false })
     public category!: string;

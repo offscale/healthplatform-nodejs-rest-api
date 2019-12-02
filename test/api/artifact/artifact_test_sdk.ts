@@ -36,17 +36,17 @@ export class ArtifactTestSDK {
         this._access_token = new_access_token;
     }
 
-    public get(artifact_location: Artifact['location']): Promise<Response> {
+    public get(artifactLocation: Artifact['location']): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            if (artifact_location == null)
-                return reject(new TypeError('`artifact_location` argument to `get` must be defined'));
+            if (artifactLocation == null)
+                return reject(new TypeError('`artifactLocation` argument to `get` must be defined'));
 
             expect(artifact_route.get).to.be.an.instanceOf(Function);
 
             testObjectValidation(this)
                 .then(() => {
                         supertest(this.app)
-                            .get(`/api/artifact/${artifact_location}`)
+                            .get(`/api/artifact/${artifactLocation}`)
                             .set('Accept', 'application/json')
                             .set('X-Access-Token', this.access_token)
                             .expect('Content-Type', /json/)
@@ -102,7 +102,7 @@ export class ArtifactTestSDK {
         });
     }
 
-    public update(artifact_location: Artifact['location'], artifact: Partial<Artifact>): Promise<Response> {
+    public update(artifactLocation: Artifact['location'], artifact: Partial<Artifact>): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (artifact == null)
                 return reject(new TypeError('`artifact` argument to `update` must be defined'));
@@ -112,7 +112,7 @@ export class ArtifactTestSDK {
             testObjectValidation(this)
                 .then(() =>
                     supertest(this.app)
-                        .put(`/api/artifact/${artifact_location}`)
+                        .put(`/api/artifact/${artifactLocation}`)
                         .set('Accept', 'application/json')
                         .set('X-Access-Token', this.access_token)
                         .send(artifact)
@@ -135,17 +135,17 @@ export class ArtifactTestSDK {
         });
     }
 
-    public remove(artifact_location: Artifact['location']): Promise<Response> {
+    public remove(artifactLocation: Artifact['location']): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
-            if (artifact_location == null)
-                return reject(new TypeError('`artifact_location` argument to `update` must be defined'));
+            if (artifactLocation == null)
+                return reject(new TypeError('`artifactLocation` argument to `update` must be defined'));
 
             expect(artifact_route.remove).to.be.an.instanceOf(Function);
 
             testObjectValidation(this)
                 .then(() => {
                     supertest(this.app)
-                        .delete(`/api/artifact/${artifact_location}`)
+                        .delete(`/api/artifact/${artifactLocation}`)
                         .set('X-Access-Token', this.access_token)
                         // .expect('Content-Type', /json/)
                         .end((err, res: Response) => {

@@ -92,7 +92,7 @@ export const getUnCategorisedArtifacts = (req: Request & IOrmReq) => new Promise
         .query(`SELECT *
                       FROM artifact_tbl artifact
                       WHERE artifact.location NOT IN (
-                              SELECT categorise.artifact_location
+                              SELECT categorise."artifactLocation"
                               FROM categorise_tbl categorise
                       )`)
         .then((result?: Artifact[]) => {
@@ -108,9 +108,6 @@ export const getUnCategorisedArtifacts = (req: Request & IOrmReq) => new Promise
             console.info('getUnCategorisedArtifacts:', parsed_result, ';');
             return resolve(parsed_result);
         })
-        /*.then((artifacts?: Artifact[]) =>
-            resolve(artifacts == null ? [] : artifacts)
-        )*/
         .catch(e => reject(fmtError(e)))
 );
 

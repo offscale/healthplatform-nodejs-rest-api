@@ -4,9 +4,9 @@ export declare class Categorise {
     static _omit: string[];
     id: number;
     artifact: Artifact;
-    artifact_location: Artifact['location'];
+    artifactLocation: Artifact['location'];
     categoryEnum: CategoryEnum;
-    category_enum_name: CategoryEnum['name'];
+    categoryEnumName: CategoryEnum['name'];
     category: string;
     username: string;
     createdAt?: Date;
