@@ -4,7 +4,6 @@ import {
     Entity,
     JoinColumn,
     ManyToOne,
-    PrimaryColumn,
     PrimaryGeneratedColumn,
     Unique,
     UpdateDateColumn
@@ -12,6 +11,7 @@ import {
 
 import { Artifact } from '../artifact/models';
 import { CategoryEnum } from '../category_enum/models';
+import { User } from '../user/models';
 
 
 @Entity('categorise_tbl')
@@ -19,18 +19,16 @@ import { CategoryEnum } from '../category_enum/models';
 export class Categorise {
     static _omit: string[] = [];
 
-    /*@Column()
-    @Generated('uuid')*/
     @PrimaryGeneratedColumn()
     public id!: number;
 
 
-    @/*Primary*/Column({ type: 'varchar' })
+    @Column({ type: 'varchar' })
     @ManyToOne(type => Artifact)
     @JoinColumn({ name: 'artifactLocation', referencedColumnName: 'location' })
     public artifactLocation!: Artifact['location'];
 
-    @/*Primary*/Column({ type: 'varchar' })
+    @Column({ type: 'varchar' })
     @ManyToOne(type => CategoryEnum)
     @JoinColumn({ name: 'categoryEnumName', referencedColumnName: 'name' })
     public categoryEnumName!: CategoryEnum['name'];
@@ -38,7 +36,9 @@ export class Categorise {
     @Column('varchar', { nullable: false })
     public category!: string;
 
-    @PrimaryColumn({ type: 'varchar', nullable: false })
+    @Column({ type: 'varchar' })
+    @ManyToOne(type => User)
+    @JoinColumn({ name: 'username', referencedColumnName: 'email' })
     public username!: string;
 
     @CreateDateColumn({ name: 'createdAt', precision: 3 })

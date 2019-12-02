@@ -13,9 +13,8 @@ export const artifact_mocks: {successes: Artifact[], failures: Array<{}>} = {
         .fill(void 0)
         .map(() => {
             const artifact = new Artifact();
-            artifact.location = `${faker.internet.url()}/${Math.random().toString().slice(2)}.jpg`;
-            // artifact.location = encodeURI(artifact.location);
-            artifact.location = Buffer.from(artifact.location).toString('base64');
+            artifact.location = encodeURIComponent(`${faker.internet.url()}/${Math.random().toString().slice(2)}.jpg`);
+            artifact.contentType = 'image/jpg';
             return artifact;
         })
 };

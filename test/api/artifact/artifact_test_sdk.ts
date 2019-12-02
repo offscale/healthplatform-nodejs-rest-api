@@ -123,7 +123,10 @@ export class ArtifactTestSDK {
                                 expect(res.status).to.be.equal(200);
                                 expect(res.body).to.be.an('object');
                                 expect(removeNullProperties(res.body)).to.be.jsonSchema(artifact_schema);
-                                Object.keys(artifact).forEach(k => expect(artifact[k]).to.be.eql(res.body[k]));
+                                Object
+                                    .keys(artifact)
+                                    .filter(k => k !== 'location')
+                                    .forEach(k => expect(artifact[k]).to.be.eql(res.body[k]));
                             } catch (e) {
                                 return reject(e as Chai.AssertionError);
                             }

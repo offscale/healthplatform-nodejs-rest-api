@@ -58,7 +58,7 @@ export const getArtifact: (req: (Request & IOrmReq)) => Promise<Artifact> = (req
                                 return reject(new NotFoundError('Artifact'));
                         } else
                             req.params.attempts = 0;
-                        
+
                         return getArtifact(req)
                             .then((_artifact?: Artifact) => _artifact == null ?
                                 reject(new NotFoundError('Artifact'))
@@ -108,7 +108,7 @@ export const getUnCategorisedArtifacts = (req: Request & IOrmReq) => new Promise
         .catch(e => reject(fmtError(e)))
 );
 
-export const upsertArtifact = (req: ArtifactBodyReq) => new Promise<Artifact>((resolve, reject) => {
+export const updateArtifact = (req: ArtifactBodyReq) => new Promise<Artifact>((resolve, reject) => {
     const ArtifactR = req.getOrm().typeorm!.connection
         .getRepository(Artifact);
 
@@ -117,22 +117,45 @@ export const upsertArtifact = (req: ArtifactBodyReq) => new Promise<Artifact>((r
     else if (req.body == null)
         return reject(new NotFoundError('req.body == null'));
 
-    ArtifactR.findOne({ where: { location: req.params.location } })
-        .then((artifact?: Artifact) => {
-            if (artifact == null) return createArtifact(req);
+    const updateBody = Object.assign({}, req.body);
+
+    getArtifact(req)
+        .then(artifact => {
             Object
                 .keys(artifact)
                 .filter(o => artifact[o] != null)
-                // @ts-ignore
                 .forEach(k => req.body[k] = artifact[k]);
+
+            artifact = new Artifact();
+
+            Object
+                .keys(updateBody)
+                .filter(k => updateBody[k] != null)
+                .forEach(k => artifact[k] = updateBody[k]);
+
+            ['createdAt', 'updatedAt']
+                .filter(k => req.body.hasOwnProperty(k))
+                .forEach(k =>
+                    delete artifact[k]
+                );
+
+            ['mimeType', 'contentType']
+                .filter(k => req.body.hasOwnProperty(k))
+                .filter(k => !artifact.hasOwnProperty(k))
+                .forEach(k =>
+                    artifact[k] = req.body[k]
+                );
 
             ArtifactR
                 .createQueryBuilder()
                 .update(Artifact)
-                .set(req.body)
+                .set(artifact)
                 .where('location = :location', { location: req.params.location })
                 .execute()
-                .then(() => getArtifact(req))
+                .then(() => {
+                    req.params.location = artifact.location;
+                    return getArtifact(req).then(resolve).catch(reject);
+                })
                 .catch(e => reject(fmtError(e)));
         })
         .catch(e => reject(fmtError(e)));
@@ -145,21 +168,16 @@ export const removeArtifact = (req: Request & IOrmReq & {user_id?: string}) => n
     if (req.params.location == null)
         return reject(new NotFoundError('req.params.location'));
 
-    ArtifactR
-        .findOne({ where: { location: req.params.location } })
-        .then((artifact?: Artifact) => {
-            if (artifact == null) {
-                return resolve(void 0);
-                // TODO: Add an `else if` here to only allow removed if admin
-            } else
-                req.getOrm().typeorm!.connection
-                    .createQueryBuilder()
-                    .delete()
-                    .from(Artifact)
-                    .where('location = :location', { location: req.params.location })
-                    .execute()
-                    .then(() => resolve(void 0))
-                    .catch(e => reject(fmtError(e)));
-        })
+    getArtifact(req)
+        .then(() =>
+            req.getOrm().typeorm!.connection
+                .createQueryBuilder()
+                .delete()
+                .from(Artifact)
+                .where('location = :location', { location: req.params.location })
+                .execute()
+                .then(() => resolve(void 0))
+                .catch(e => reject(fmtError(e)))
+        )
         .catch(e => reject(fmtError(e)));
 });

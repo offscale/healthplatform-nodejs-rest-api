@@ -1,8 +1,10 @@
 import * as argon2 from 'argon2';
 import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
-import { argon2_options } from './utils';
 import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
+
+import { argon2_options } from './utils';
+
 
 export const hash_password = (password: string, callback: (e?: Error, hash?: string) => void): void =>
     (password.startsWith('$argon2') ?
@@ -17,16 +19,22 @@ export class User {
     public static _omit: string[] = ['password'];
     @PrimaryColumn({ type: 'varchar', name: 'email', nullable: false, primary: true, unique: true })
     public email!: string;
+
     @Column('varchar', { nullable: false, select: false })
     public password!: string;
+
     @Column('varchar', { nullable: true })
     public title?: string;
+
     @CreateDateColumn({ name: 'createdAt', precision: 3 })
     public createdAt?: Date;
+
     @UpdateDateColumn({ name: 'updatedAt', precision: 3 })
     public updatedAt?: Date;
+
     @Column('simple-array', { nullable: false })
     public roles!: string[];
+
     // Might get attached for tests or in middleware; NOT present in db
     public access_token?: AccessTokenType;
 
