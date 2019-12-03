@@ -1,6 +1,6 @@
 {
   "name": "healthplatform-nodejs-rest-api",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "System for doctors to triage patient images",
   "keywords": [
     "triage",

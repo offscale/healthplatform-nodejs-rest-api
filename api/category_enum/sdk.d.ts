@@ -1,7 +1,7 @@
 import { Request } from 'restify';
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
-import { CategoryEnum } from './models';
 import { JsonSchema } from 'tv4';
+import { CategoryEnum } from './models';
 export declare const schema: JsonSchema;
 export declare type CategoryEnumBodyReq = Request & IOrmReq & {
     body?: CategoryEnum;

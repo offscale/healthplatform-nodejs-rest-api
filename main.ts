@@ -1,4 +1,4 @@
-import { series, waterfall } from 'async';
+import { each, series, waterfall } from 'async';
 import Logger, { createLogger } from 'bunyan';
 import { default as restify, Server } from 'restify';
 
@@ -15,6 +15,9 @@ import { User } from './api/user/models';
 import { post as register_user, UserBodyReq, UserConfig } from './api/user/sdk';
 import * as config from './config';
 import { getOrmMwConfig, getPrivateIPAddress, OrmMwConfigCb } from './config';
+import { importDrSpocData } from './import_dr_spoc';
+import { ArtifactBodyReq, createArtifact } from './api/artifact/sdk';
+import { Artifact } from './api/artifact/models';
 
 /* tslint:disable:no-var-requires */
 export const package_ = Object.freeze(require('./package'));
@@ -55,7 +58,7 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
 
                         const authSdk = new AuthTestSDK(app);
 
-                        const envs = ['DEFAULT_ADMIN_EMAIL', 'DEFAULT_ADMIN_PASSWORD'];
+                        const envs = ['DEFAULT_ADMIN_EMAIL', 'DEFAULT_ADMIN_PASSWORD', 'SAMPLE_DATA_PATH'];
                         if (!envs.every(process.env.hasOwnProperty.bind(process.env)))
                             return next(ReferenceError(`${envs.join(', ')} must all be defined in your environment`));
 
@@ -64,6 +67,7 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                             password: process.env.DEFAULT_ADMIN_PASSWORD!,
                             roles: ['registered', 'login', 'admin']
                         };
+                        console.info('process.env.NO_SAMPLE_DATA:', process.env.NO_SAMPLE_DATA, ';');
 
                         series({
                                 unregister: callb => authSdk.unregister_all([default_admin])
@@ -87,6 +91,36 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                                     };
                                     return callb(void 0);
                                 },
+                                importData: callb =>
+                                    process.env.NO_SAMPLE_DATA == null || process.env.NO_SAMPLE_DATA === 'true' ?
+                                        callb(void 0)
+                                        : importDrSpocData(process.env.SAMPLE_DATA_PATH!, (e, artifactPaths) => {
+                                            if (e != null) return callb(e);
+                                            else if (artifactPaths == null || artifactPaths.length == null)
+                                                return callb(new TypeError('artifactPaths is empty'));
+
+                                            console.info('artifactPaths:', artifactPaths, ';');
+
+                                            each(artifactPaths, (artifactPath, c_b) => {
+                                                const artifact = new Artifact();
+                                                artifact.location = artifactPath;
+
+                                                if (process.env.BASE_DIR_REPLACE != null && process.env.BASE_DIR != null)
+                                                    artifact.location = artifact.location
+                                                        .replace(process.env.BASE_DIR_REPLACE, process.env.BASE_DIR);
+
+                                                artifact.contentType = 'image/jpg';
+
+                                                createArtifact({
+                                                    getOrm: () => config._orms_out.orms_out,
+                                                    orms_out: config._orms_out.orms_out,
+                                                    body: artifact
+                                                } as IOrmReq & {body?: Artifact} as ArtifactBodyReq)
+                                                    .then(() => c_b(void 0))
+                                                    .catch(c_b)
+                                            }, callb)
+                                        })
+                                ,
                                 serve: callb =>
                                     typeof logger.info(`${app.name} listening from ${app.url}`) === 'undefined'
                                     && callb(void 0)
