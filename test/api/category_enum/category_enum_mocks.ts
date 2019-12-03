@@ -15,7 +15,7 @@ export const category_enum_mocks: (users: User[]) => {successes: CategoryEnum[],
                 .fill(void 0)
                 .map(() => {
                     const category_enum = new CategoryEnum();
-                    category_enum.name = faker.commerce.department();
+                    category_enum.name = [faker.commerce.department(), Math.random().toString()].join('_');
                     category_enum.enumeration = [
                         faker.name.jobDescriptor(),
                         faker.name.jobDescriptor(),

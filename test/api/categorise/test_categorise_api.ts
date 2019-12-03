@@ -24,13 +24,17 @@ import { categorise_mocks } from './categorise_mocks';
 import { artifact_mocks } from '../artifact/artifact_mocks';
 import { ArtifactTestSDK } from '../artifact/artifact_test_sdk';
 import { Artifact } from '../../../api/artifact/models';
+import { category_enum_mocks } from '../category_enum/category_enum_mocks';
+import { CategoryEnum } from '../../../api/category_enum/models';
+import { CategoryEnumTestSDK } from '../category_enum/category_enum_test_sdk';
 
 
 const models_and_routes: IModelRoute = {
     user: all_models_and_routes_as_mr['user'],
     auth: all_models_and_routes_as_mr['auth'],
     artifact: all_models_and_routes_as_mr['artifact'],
-    categorise: all_models_and_routes_as_mr['categorise']
+    categorise: all_models_and_routes_as_mr['categorise'],
+    category_enum: all_models_and_routes_as_mr['category_enum']
 };
 
 process.env['NO_SAMPLE_DATA'] = 'true';
@@ -39,7 +43,8 @@ const _rng = [74, 86];
 const user_mocks_subset: User[] = user_mocks.successes.slice(..._rng);
 const one_user_many: User[] = Array(user_mocks_subset.length).fill(user_mocks_subset[0]);
 const artifact_mocks_subset: Artifact[] = artifact_mocks.successes.slice(..._rng);
-const mocks: Categorise[] = categorise_mocks(one_user_many, artifact_mocks_subset).successes;
+const category_enum_subset: CategoryEnum[] = category_enum_mocks(user_mocks_subset).successes.slice(..._rng);
+const mocks: Categorise[] = categorise_mocks(one_user_many, artifact_mocks_subset, category_enum_subset).successes;
 
 const tapp_name = `test::${basename(__dirname)}`;
 const connection_name = `${tapp_name}::${path.basename(__filename).replace(/\./g, '-')}`;
@@ -50,6 +55,7 @@ describe('Categorise::routes', () => {
     let auth_sdk: AuthTestSDK;
     let user_sdk: UserTestSDK;
     let artifact_sdk: ArtifactTestSDK;
+    let category_enum_sdk: CategoryEnumTestSDK;
     let app: Server;
 
     before(done =>
@@ -69,6 +75,7 @@ describe('Categorise::routes', () => {
                     auth_sdk = new AuthTestSDK(_app);
                     user_sdk = new UserTestSDK(_app);
                     artifact_sdk = new ArtifactTestSDK(_app);
+                    category_enum_sdk = new CategoryEnumTestSDK(_app);
 
                     return cb(void 0);
                 }
@@ -88,7 +95,7 @@ describe('Categorise::routes', () => {
                     .then(res => {
                         user.access_token = res!.header['x-access-token'];
 
-                        sdk.access_token = artifact_sdk.access_token = user.access_token!;
+                        sdk.access_token = artifact_sdk.access_token = category_enum_sdk.access_token = user.access_token!;
 
                         return cb(void 0);
                     })
@@ -103,6 +110,20 @@ describe('Categorise::routes', () => {
                     .then(created_artifact_response => {
                         artifact_mocks_subset[idx] = mocks[
                             idx].artifactLocation = created_artifact_response.body.location;
+                        return cb(void 0);
+                    })
+                    .catch(cb),
+            done)
+        );
+
+        before('create all CategoryEnum objects', (done: Mocha.Done) => each(
+            Object.keys(category_enum_subset).map(i => +i), (idx, cb) =>
+                category_enum_sdk
+                    .post(category_enum_subset[idx])
+                    .then(created_category_enum_response => {
+                        ['updatedAt', 'createdAt'].forEach(k =>
+                            category_enum_subset[idx][k] = created_category_enum_response.body[k]
+                        );
                         return cb(void 0);
                     })
                     .catch(cb),
@@ -127,6 +148,17 @@ describe('Categorise::routes', () => {
                         cb(void 0)
                         : artifact_sdk
                             .remove(artifact.location)
+                            .then(() => cb(void 0))
+                            .catch(cb),
+                done));
+
+        after('remove all CategoryEnum objects', (done) =>
+            each(category_enum_subset,
+                (category_enum, cb) =>
+                    category_enum == null || category_enum.createdAt == null ?
+                        cb(void 0)
+                        : category_enum_sdk
+                            .remove(category_enum.name)
                             .then(() => cb(void 0))
                             .catch(cb),
                 done));

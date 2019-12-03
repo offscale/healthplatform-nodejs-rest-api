@@ -30,6 +30,8 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
     // TODO: Use provided `username` if admin
     categorise.username = req.user_id!;
 
+    console.info('createCategorise::before::createQueryBuilder');
+
     /*const q = */
     req.getOrm().typeorm!.connection
         .createQueryBuilder()
@@ -54,6 +56,7 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
         })
         .catch(e => {
             const err = fmtError(e)!;
+            console.error('createCategorise::err:', err, ';');
             if (req.query.upsert === 'true'
                 && err.hasOwnProperty('message')
                 && err.message.indexOf('duplicate key value violates unique constraint') > -1)
@@ -75,9 +78,12 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
                         req.params.id = categorise.id = foundCategorises[0].id;
                         return updateCategorise(req)
                             .then(resolve)
-                            .catch(e => reject(fmtError(e)));
+                            .catch(reject);
                     })
-                    .catch(e => reject(fmtError(e)));
+                    .catch(e => {
+                        console.error('createCategorise::find::e:', e, ';');
+                        reject(fmtError(e))
+                    });
             else
                 return reject(err)
         });
@@ -127,22 +133,51 @@ export const updateCategorise = (req: CategoriseBodyReq) => new Promise<Categori
     else if (req.body == null)
         return reject(new NotFoundError('req.body == null'));
 
-    CategoriseR.findOne({
+    const updateBody = Object.assign({}, req.body);
+    req.body = {
         id: req.params.id,
         username: req.user_id!
-    })
-        .then((categorise?: Categorise) => {
-            if (categorise == null) return createCategorise(req);
+    };
+    getCategorise(req)
+        .then(categorise => {
             Object
-                .keys(req.body)
-                // @ts-ignore
-                .forEach(k => categorise[k] = req.body[k]);
+                .keys(categorise)
+                .filter(o => categorise[o] != null)
+                .forEach(k => req.body[k] = categorise[k]);
+
+            categorise = new Categorise();
+
+            Object
+                .keys(updateBody)
+                .filter(k => updateBody[k] != null)
+                .forEach(k => categorise[k] = updateBody[k]);
+
+            ['createdAt', 'updatedAt']
+                .filter(k => req.body.hasOwnProperty(k))
+                .forEach(k =>
+                    delete categorise[k]
+                );
+
+            ['id', 'username', 'categoryEnumName', 'artifactLocation']
+                .filter(k => req.body.hasOwnProperty(k))
+                .filter(k => !categorise.hasOwnProperty(k))
+                .forEach(k =>
+                    categorise[k] = req.body[k]
+                );
+
             CategoriseR
-                .save(categorise)
-                .then(handleCategorise(resolve, reject))
+                .createQueryBuilder()
+                .update(Categorise)
+                .set(categorise)
+                .where('id = :id', { id: req.params.id })
+                .execute()
+                .then(() => {
+                    req.params.id = categorise.id;
+                    return getCategorise(req).then(resolve).catch(reject);
+                })
                 .catch(e => reject(fmtError(e)));
-        })
-        .catch(e => reject(fmtError(e)));
+
+        });
 });
 
 export const removeCategorise = (req: Request & IOrmReq & {user_id?: string}) => new Promise<void>((resolve, reject) => {

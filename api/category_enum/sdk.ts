@@ -48,7 +48,7 @@ export const getCategoryEnum = (req: Request & IOrmReq) => new Promise<CategoryE
         reject(new NotFoundError('req.params.name'))
         : req.getOrm().typeorm!.connection
             .getRepository(CategoryEnum)
-            .findOne(req.params.name)
+            .findOne({ name: req.params.name })
             .then(handleCategoryEnum(resolve, reject))
             .catch(e => reject(fmtError(e)))
 );
@@ -76,7 +76,7 @@ export const updateCategoryEnum = (req: CategoryEnumBodyReq) => new Promise<Cate
     else if (req.body == null)
         return reject(new NotFoundError('req.body == null'));
 
-    CategoryEnumR.findOne(req.params.name)
+    CategoryEnumR.findOne({ name: req.params.name })
         .then((category_enum?: CategoryEnum) => {
             if (category_enum == null) return createCategoryEnum(req);
             Object
@@ -99,7 +99,7 @@ export const removeCategoryEnum = (req: Request & IOrmReq & {user_id?: string}) 
         return reject(new NotFoundError('req.params.name'));
 
     CategoryEnumR
-        .findOne(req.params.name)
+        .findOne({ name: req.params.name })
         .then((category_enum?: CategoryEnum) => {
             if (category_enum == null) {
                 return resolve(void 0);
@@ -112,7 +112,13 @@ export const removeCategoryEnum = (req: Request & IOrmReq & {user_id?: string}) 
                     .where('name = :name', { name: req.params.name })
                     .execute()
                     .then(() => resolve(void 0))
-                    .catch(e => reject(fmtError(e)));
+                    .catch(e => {
+                        console.info('1DELETE::e', e, ';');
+                        reject(fmtError(e))
+                    });
         })
-        .catch(e => reject(fmtError(e)));
+        .catch(e => {
+            console.info('0DELETE::e', e, ';');
+            reject(fmtError(e))
+        });
 });
