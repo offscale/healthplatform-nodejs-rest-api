@@ -30,8 +30,6 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
     // TODO: Use provided `username` if admin
     categorise.username = req.user_id!;
 
-    console.info('createCategorise::before::createQueryBuilder');
-
     /*const q = */
     req.getOrm().typeorm!.connection
         .createQueryBuilder()
@@ -56,7 +54,6 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
         })
         .catch(e => {
             const err = fmtError(e)!;
-            console.error('createCategorise::err:', err, ';');
             if (req.query.upsert === 'true'
                 && err.hasOwnProperty('message')
                 && err.message.indexOf('duplicate key value violates unique constraint') > -1)
@@ -80,12 +77,8 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
                             .then(resolve)
                             .catch(reject);
                     })
-                    .catch(e => {
-                        console.error('createCategorise::find::e:', e, ';');
-                        reject(fmtError(e))
-                    });
-            else
-                return reject(err)
+                    .catch(e => reject(fmtError(e)));
+            return reject(err)
         });
 });
 

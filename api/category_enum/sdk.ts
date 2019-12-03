@@ -1,10 +1,12 @@
 import { Request } from 'restify';
 
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
+import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+
+import { JsonSchema } from 'tv4';
 
 import { CategoryEnum } from './models';
-import { JsonSchema } from 'tv4';
-import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('../../test/api/category_enum/schema');
@@ -113,12 +115,12 @@ export const removeCategoryEnum = (req: Request & IOrmReq & {user_id?: string}) 
                     .execute()
                     .then(() => resolve(void 0))
                     .catch(e => {
-                        console.info('1DELETE::e', e, ';');
-                        reject(fmtError(e))
+                        console.error('removeCategoryEnum::findOne::delete::e', e, ';');
+                        return reject(fmtError(e));
                     });
         })
         .catch(e => {
-            console.info('0DELETE::e', e, ';');
-            reject(fmtError(e))
+            console.error('removeCategoryEnum::findOne::e', e, ';');
+            return reject(fmtError(e));
         });
 });

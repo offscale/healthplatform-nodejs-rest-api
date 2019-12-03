@@ -115,7 +115,6 @@ describe('Artifact::routes', () => {
 
         it('PUT should update Artifact object', async () => {
             mocks[2] = (await sdk.post(mocks[2])).body;
-            console.info('mocks[2] after post:', mocks[2], ';');
             const updated = (await sdk.update(mocks[2].location, { location: 'http://example.com/7430341257276318.jpg' })).body;
             expect(mocks[2].location).to.be.not.eql(updated.location);
             ['location', 'updatedAt'].forEach(k => mocks[2][k] = updated[k]);

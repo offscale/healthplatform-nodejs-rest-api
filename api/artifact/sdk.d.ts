@@ -11,7 +11,7 @@ export declare type ArtifactBodyReq = Request & IOrmReq & {
 export declare const createArtifact: (req: ArtifactBodyReq) => Promise<Artifact>;
 export declare const getArtifact: (req: (Request & IOrmReq)) => Promise<Artifact>;
 export declare const getManyArtifact: (req: Request & IOrmReq) => Promise<Artifact[]>;
-export declare const getUnCategorisedArtifacts: (req: Request & IOrmReq) => Promise<Artifact[]>;
+export declare const getNextArtifactByCategory: (req: Request & IOrmReq) => Promise<Artifact[]>;
 export declare const updateArtifact: (req: ArtifactBodyReq) => Promise<Artifact>;
 export declare const removeArtifact: (req: Request & IOrmReq & {
     user_id?: string | undefined;

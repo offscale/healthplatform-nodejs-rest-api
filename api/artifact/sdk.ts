@@ -5,6 +5,8 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { Artifact } from './models';
 import { JsonSchema } from 'tv4';
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
+import { Categorise } from '../categorise/models';
+import { MoreThanOrEqual } from 'typeorm';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('../../test/api/artifact/schema');
@@ -84,15 +86,40 @@ export const getManyArtifact = (req: Request & IOrmReq) => new Promise<Artifact[
         .catch(e => reject(fmtError(e)))
 );
 
-export const getUnCategorisedArtifacts = (req: Request & IOrmReq) => new Promise<Artifact[]>((resolve, reject) =>
-    req.getOrm().typeorm!.connection
-        .getRepository(Artifact)
-        .query(`SELECT *
+export const getNextArtifactByCategory = (req: Request & IOrmReq) => new Promise<Artifact[]>((resolve, reject) => {
+    ((): Promise<Artifact[]> => {
+        if (Object.keys(req.query).length > 0) {
+            if (req.query.updatedAt) {
+                req.query.updatedAt = MoreThanOrEqual(req.query.updatedAt);
+                // TODO: Implement updatedAt support
+                console.warn('getNextArtifactByCategory::req.query.updatedAt not supported (yet)');
+                delete req.query.updatedAt;
+            }
+
+            return req.getOrm().typeorm!.connection
+                .getRepository(Categorise)
+                .find({
+                    where: req.query,
+                    relations: ['artifactLocation']
+                })
+                .then(categorises => {
+                    if (categorises == null) return Promise.resolve([]);
+                    return Promise.resolve(
+                        categorises.map(categorise =>
+                            (categorise as unknown as Categorise & {artifact: Artifact}).artifact
+                        )
+                    );
+                })
+        } else
+            return req.getOrm().typeorm!.connection
+                .getRepository(Artifact)
+                .query(`SELECT *
                       FROM artifact_tbl artifact
                       WHERE artifact.location NOT IN (
                               SELECT categorise."artifactLocation"
                               FROM categorise_tbl categorise
-                      )`)
+                      )`);
+    })()
         .then((result?: Artifact[]) => {
             if (result == null) return resolve([]);
             const parsed_result: Artifact[] = result.map(r => {
@@ -105,8 +132,8 @@ export const getUnCategorisedArtifacts = (req: Request & IOrmReq) => new Promise
             });
             return resolve(parsed_result);
         })
-        .catch(e => reject(fmtError(e)))
-);
+        .catch(e => reject(fmtError(e)));
+});
 
 export const updateArtifact = (req: ArtifactBodyReq) => new Promise<Artifact>((resolve, reject) => {
     const ArtifactR = req.getOrm().typeorm!.connection
