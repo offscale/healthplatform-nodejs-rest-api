@@ -69,7 +69,7 @@ export const importDrSpocData = (searchPath: string,
     const s = (p: string, callback: (err: NodeJS.ErrnoException | null, files?: string[]) => void): void => {
         readdir(p, (err, files) => {
             if (err != null) return callback(err);
-            else if (files == null || !files.length) return callback(new Error('Expected files'));
+            else if (files == null || !files.length) return callback(new Error(`Expected files in: '${p}'`));
             const base = path.basename(p);
             return callback(null,
                 files
@@ -87,26 +87,28 @@ export const importDrSpocData = (searchPath: string,
 
     readdir(searchPath, (err, folders) => {
         if (err != null) throw err;
-        else if (folders == null || !folders.length) throw new ReferenceError(`${searchPath} is empty`);
+        else if (folders == null || !folders.length) throw new ReferenceError(`'${searchPath}' is empty`);
 
         map(folders
                 .filter(folder => all_values.has(folder))
                 .map(folder => path.join(searchPath, folder))
                 .filter(abs_folder => statSync(abs_folder).isDirectory()),
             s,
-            (errors, result) => {
+            (errors, files) => {
                 if (errors != null) return callback(errors);
-                else if (result == null || !result.length) return callback(new Error('Expected a result'));
-                return callback(null, (result as unknown as string[]).flat());
+                else if (files == null || !files.length)
+                    return callback(new ReferenceError(`Expected a files from filtered contents of: ${searchPath}`));
+                return callback(null, (files as unknown as string[]).flat());
             })
     });
 };
 
 if (require.main === module) {
-    importDrSpocData(process.env.SAMPLE_DATA_PATH!, (e, r) => {
+    importDrSpocData(process.env.SAMPLE_DATA_PATH!, (e, files) => {
         if (e != null) throw e;
-        else if (r == null) throw TypeError('DrSpocData is null');
-        console.info(r.map(o =>
+        else if (files == null)
+            throw TypeError(`DrSpocData returned no files within: '${process.env.SAMPLE_DATA_PATH!}'`);
+        console.info(files.map(o =>
             encodeURIComponent(o.replace(process.env.BASE_DIR_REPLACE!, process.env.BASE_DIR!))
         ).join('\n'));
     });

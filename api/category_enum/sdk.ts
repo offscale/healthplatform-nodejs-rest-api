@@ -6,6 +6,7 @@ import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { JsonSchema } from 'tv4';
 
 import { CategoryEnum } from './models';
+import { IUserReq } from '../shared_interfaces';
 
 
 /* tslint:disable:no-var-requires */
@@ -93,7 +94,7 @@ export const updateCategoryEnum = (req: CategoryEnumBodyReq) => new Promise<Cate
         .catch(e => reject(fmtError(e)));
 });
 
-export const removeCategoryEnum = (req: Request & IOrmReq & {user_id?: string}) => new Promise<void>((resolve, reject) => {
+export const removeCategoryEnum = (req: Request & IOrmReq & IUserReq) => new Promise<void>((resolve, reject) => {
     const CategoryEnumR = req.getOrm().typeorm!.connection
         .getRepository(CategoryEnum);
 

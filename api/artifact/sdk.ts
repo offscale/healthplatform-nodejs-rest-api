@@ -7,6 +7,7 @@ import { JsonSchema } from 'tv4';
 import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { Categorise } from '../categorise/models';
 import { MoreThanOrEqual } from 'typeorm';
+import { IUserReq } from '../shared_interfaces';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('../../test/api/artifact/schema');
@@ -188,7 +189,7 @@ export const updateArtifact = (req: ArtifactBodyReq) => new Promise<Artifact>((r
         .catch(e => reject(fmtError(e)));
 });
 
-export const removeArtifact = (req: Request & IOrmReq & {user_id?: string}) => new Promise<void>((resolve, reject) => {
+export const removeArtifact = (req: Request & IOrmReq & IUserReq) => new Promise<void>((resolve, reject) => {
     const ArtifactR = req.getOrm().typeorm!.connection
         .getRepository(Artifact);
 

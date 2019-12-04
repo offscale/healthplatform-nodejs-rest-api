@@ -5,11 +5,12 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 import { Categorise } from './models';
 import { JsonSchema } from 'tv4';
 import { fmtError, GenericError, NotFoundError } from '@offscale/custom-restify-errors';
+import { IUserReq } from '../shared_interfaces';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('./../../test/api/categorise/schema');
 
-export type CategoriseBodyReq = Request & IOrmReq & {body?: Categorise, user_id?: string};
+export type CategoriseBodyReq = Request & IOrmReq & {body?: Categorise} & IUserReq;
 
 const handleCategorise = (resolve: (categorise: Categorise) => void,
                           reject: (error: Error) => void) => (categorise?: Categorise) =>
@@ -47,7 +48,7 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
             : q)*/
         .execute()
         .then((insertResult) => {
-            req.params.id = insertResult.identifiers.filter(o => Object.keys(o)[0] === 'id')[0];
+            req.params.id = insertResult.identifiers.filter(o => Object.keys(o)[0] === 'id')[0].id;
             getCategorise(req)
                 .then(resolve)
                 .catch(reject)
@@ -82,7 +83,7 @@ export const createCategorise = (req: CategoriseBodyReq) => new Promise<Categori
         });
 });
 
-export const getCategorise = (req: Request & IOrmReq & {user_id?: string}) => new Promise<Categorise>(
+export const getCategorise = (req: Request & IOrmReq & IUserReq) => new Promise<Categorise>(
     (resolve, reject) =>
         req.params.id == null ?
             reject(new NotFoundError('req.params.id'))
@@ -99,23 +100,27 @@ export const getCategorise = (req: Request & IOrmReq & {user_id?: string}) => ne
                 .catch(e => reject(fmtError(e)))
 );
 
-export const getManyCategorise = (req: Request & IOrmReq) => new Promise<Categorise[]>((resolve, reject) =>
-    req.getOrm().typeorm!.connection
-        .getRepository(Categorise)
-        .find({
-            select: req.getOrm().typeorm!.connection
-                .getMetadata(Categorise)
-                .columns
-                .map(cm => cm.propertyAliasName) as any,
-            order: {
-                updatedAt: 'ASC'
-            }
-        })
-        .then((categorises?: Categorise[]) =>
-            resolve(categorises == null ? [] : categorises)
-        )
-        .catch(e => reject(fmtError(e)))
-);
+export const getManyCategorise = (req: Request & IOrmReq & IUserReq) =>
+    new Promise<Categorise[]>((resolve, reject) =>
+        req.getOrm().typeorm!.connection
+            .getRepository(Categorise)
+            .find({
+                select: req.getOrm().typeorm!.connection
+                    .getMetadata(Categorise)
+                    .columns
+                    .map(cm => cm.propertyAliasName) as any,
+                where: {
+                    username: req.user_id!
+                },
+                order: {
+                    updatedAt: 'ASC'
+                }
+            })
+            .then((categorises?: Categorise[]) =>
+                resolve(categorises == null ? [] : categorises)
+            )
+            .catch(e => reject(fmtError(e)))
+    );
 
 export const updateCategorise = (req: CategoriseBodyReq) => new Promise<Categorise>((resolve, reject) => {
     const CategoriseR = req.getOrm().typeorm!.connection
@@ -163,6 +168,9 @@ export const updateCategorise = (req: CategoriseBodyReq) => new Promise<Categori
                 .update(Categorise)
                 .set(categorise)
                 .where('id = :id', { id: req.params.id })
+                .andWhere('username = :username', {
+                    username: req.user_id!
+                })
                 .execute()
                 .then(() => {
                     req.params.id = categorise.id;
@@ -173,7 +181,7 @@ export const updateCategorise = (req: CategoriseBodyReq) => new Promise<Categori
         });
 });
 
-export const removeCategorise = (req: Request & IOrmReq & {user_id?: string}) => new Promise<void>((resolve, reject) => {
+export const removeCategorise = (req: Request & IOrmReq & IUserReq) => new Promise<void>((resolve, reject) => {
     const CategoriseR = req.getOrm().typeorm!.connection
         .getRepository(Categorise);
 
