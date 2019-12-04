@@ -106,7 +106,9 @@ if (require.main === module) {
     importDrSpocData(process.env.SAMPLE_DATA_PATH!, (e, r) => {
         if (e != null) throw e;
         else if (r == null) throw TypeError('DrSpocData is null');
-        console.info(r.map(o => o.replace(process.env.BASE_DIR_REPLACE!, process.env.BASE_DIR!)).join('\n'));
+        console.info(r.map(o =>
+            encodeURIComponent(o.replace(process.env.BASE_DIR_REPLACE!, process.env.BASE_DIR!))
+        ).join('\n'));
     });
 }
 
