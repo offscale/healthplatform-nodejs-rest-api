@@ -102,8 +102,9 @@ export const importDrSpocData = (searchPath: string, callback: (err: NodeJS.Errn
 };
 
 if (require.main === module) {
-    importDrSpocData('', (e, r) => {
+    importDrSpocData(process.env.SAMPLE_DATA_PATH!, (e, r) => {
         if (e != null) throw e;
-        console.info(r);
+        else if (r == null) throw TypeError('DrSpocData is null');
+        console.info(r.map(o => o.replace(process.env.BASE_DIR_REPLACE!, process.env.BASE_DIR!)).join('\n'));
     });
 }
