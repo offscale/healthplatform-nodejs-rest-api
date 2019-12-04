@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "declaration": true,
+    "declaration": false,
     "preserveConstEnums": true,
     "forceConsistentCasingInFileNames": true,
     "suppressImplicitAnyIndexErrors": true
