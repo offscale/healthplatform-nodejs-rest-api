@@ -11,6 +11,7 @@ import * as categorise_routes from '../../../api/categorise/routes';
 import * as categorise_route from '../../../api/categorise/route';
 import { removeNullProperties } from '../../../utils';
 import { testObjectValidation } from '../../shared_tests';
+import { Artifact } from '../../../api/artifact/models';
 
 /* tslint:disable:no-var-requires */
 const categorise_schema = sanitiseSchema(require('./../categorise/schema.json'), Categorise._omit);
@@ -19,6 +20,12 @@ const categorise_schema = sanitiseSchema(require('./../categorise/schema.json'),
 chai.use(require('chai-json-schema-ajv'));
 
 const expect: Chai.ExpectStatic = chai.expect;
+
+const removeArtifact = (categorise: {[key: string]: any} /*& {artifact: Artifact}*/): typeof categorise =>
+    categorise.hasOwnProperty('artifact') &&
+    delete (categorise as unknown as Categorise & {artifact: Artifact}).artifact &&
+    categorise ||
+    categorise;
 
 export class CategoriseTestSDK {
     constructor(public app: Server) {
@@ -57,7 +64,8 @@ export class CategoriseTestSDK {
                                 try {
                                     expect(res.status).to.be.equal(200);
                                     expect(res.body).to.be.an('object');
-                                    expect(removeNullProperties(res.body)).to.be.jsonSchema(categorise_schema);
+                                    CategoriseTestSDK.parseOutArtifactLocation(res);
+                                    expect(removeArtifact(removeNullProperties(res.body))).to.be.jsonSchema(categorise_schema);
                                 } catch (e) {
                                     return reject(e as Chai.AssertionError);
                                 }
@@ -90,6 +98,7 @@ export class CategoriseTestSDK {
                             try {
                                 expect(res.status).to.be.equal(201);
                                 expect(res.body).to.be.an('object');
+                                CategoriseTestSDK.parseOutArtifactLocation(res);
                                 expect(removeNullProperties(res.body)).to.be.jsonSchema(categorise_schema);
                             } catch (e) {
                                 return reject(e as Chai.AssertionError);
@@ -100,6 +109,10 @@ export class CategoriseTestSDK {
                 })
                 .catch(reject);
         });
+    }
+
+    private static parseOutArtifactLocation(res: supertest.Response) {
+        res.body.artifactLocation = (res.body.artifactLocation as Artifact).location;
     }
 
     public update(categorise_id: Categorise['id'], categorise: Partial<Categorise>): Promise<Response> {
@@ -122,6 +135,7 @@ export class CategoriseTestSDK {
                             try {
                                 expect(res.status).to.be.equal(200);
                                 expect(res.body).to.be.an('object');
+                                CategoriseTestSDK.parseOutArtifactLocation(res);
                                 expect(removeNullProperties(res.body)).to.be.jsonSchema(categorise_schema);
                                 Object.keys(categorise).forEach(k => expect(categorise[k]).to.be.eql(res.body[k]));
                             } catch (e) {
