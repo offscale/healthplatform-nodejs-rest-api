@@ -2,7 +2,8 @@ import { readdir, statSync } from 'fs';
 import * as path from 'path';
 import { map } from 'async';
 
-export const importDrSpocData = (searchPath: string, callback: (err: NodeJS.ErrnoException | null, files?: string[]) => void): void => {
+export const importDrSpocData = (searchPath: string,
+                                 callback: (err: NodeJS.ErrnoException | null, files?: string[]) => void): void => {
     const filters = {
         R1: [73, 197, 198, 212, 426, 547, 652, 792, 841, 885, 981, 1014, 1039, 1054, 1061, 1072, 1130, 1157, 1202, 1212,
             1236, 1293, 1396, 1439, 1501, 1512, 1584, 1659, 1679, 1765, 2172, 2345, 2567, 2571, 2573, 2606, 2609, 2687,
@@ -108,3 +109,14 @@ if (require.main === module) {
         console.info(r.map(o => o.replace(process.env.BASE_DIR_REPLACE!, process.env.BASE_DIR!)).join('\n'));
     });
 }
+
+/*
+
+printf '#!/usr/bin/env bash\n\n' > ~/data-upload.bash ;
+env -i SAMPLE_DATA_PATH='DIR HERE' BASE_DIR_REPLACE='OTHER DIR HERE'
+ BASE_DIR='BASE DIR HERE' PATH="$HOME"'/n/bin' node import_dr_spoc.js
+  | xargs -I % bash -c
+  'echo http POST :3000/api/artifact
+   \"'"$at"'\" location=\"%\" contentType=\"image/jpeg\"' >> ~/data-upload.bash
+
+*/

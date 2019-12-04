@@ -8,7 +8,7 @@ export class Artifact {
     @PrimaryColumn({ type: 'varchar', nullable: false, unique: true })
     public location!: string;
 
-    @Column({ type: 'varchar', nullable: false, default: 'x-www-form-urlencoded' })
+    @Column({ type: 'varchar', nullable: false, default: 'application/x-www-form-urlencoded' })
     public mimeType!: string;
 
     @Column({type: 'varchar', nullable: false})
