@@ -6,6 +6,7 @@ import { Categorise } from './models';
 import { JsonSchema } from 'tv4';
 import { fmtError, GenericError, NotFoundError } from '@offscale/custom-restify-errors';
 import { IUserReq } from '../shared_interfaces';
+import { hasRole } from '../auth/middleware';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('./../../test/api/categorise/schema');
@@ -91,10 +92,10 @@ export const getCategorise = (req: Request & IOrmReq & IUserReq) => new Promise<
                 .getRepository(Categorise)
                 .findOne({
                     relations: ['artifactLocation'],
-                    where: {
-                        id: req.params.id,
-                        username: req.user_id!
-                    }
+                    where: Object.assign({ id: req.params.id },
+                        hasRole(req, 'admin') ? {} :
+                            { username: req.user_id! }
+                    )
                 })
                 .then(handleCategorise(resolve, reject))
                 .catch(e => reject(fmtError(e)))
@@ -104,18 +105,19 @@ export const getManyCategorise = (req: Request & IOrmReq & IUserReq) =>
     new Promise<Categorise[]>((resolve, reject) =>
         req.getOrm().typeorm!.connection
             .getRepository(Categorise)
-            .find({
+            .find(Object.assign({
                 select: req.getOrm().typeorm!.connection
                     .getMetadata(Categorise)
                     .columns
                     .map(cm => cm.propertyAliasName) as any,
-                where: {
-                    username: req.user_id!
-                },
                 order: {
                     updatedAt: 'ASC'
                 }
-            })
+            }, hasRole(req, 'admin') ? {} : {
+                where: {
+                    username: req.user_id!
+                }
+            }))
             .then((categorises?: Categorise[]) =>
                 resolve(categorises == null ? [] : categorises)
             )

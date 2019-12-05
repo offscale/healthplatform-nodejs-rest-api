@@ -8,6 +8,7 @@ import { AccessToken } from './models';
 export const has_auth = (scope = 'access') =>
     (request: restify.Request, res: restify.Response, next: restify.Next) => {
         const req = request as unknown as restify.Request & IOrmReq & {user_id: string};
+        const body_id = req.params.email || req.body && (req.body.user_id || req.body.email);
 
         if (req.headers['x-access-token'] == null)
             if (req.params.access_token != null)
@@ -21,15 +22,13 @@ export const has_auth = (scope = 'access') =>
 
         const access_token = req.headers['x-access-token'] as string;
 
-        if (access_token.indexOf(scope) < 0)
+        if (!hasRole(req, scope))
             return next(new AuthError(`${scope} required to view; ` +
                 `you only have ${access_token.slice(access_token.lastIndexOf(':'))}`)
             );
 
-        const body_id = req.params.email || req.body && (req.body.user_id || req.body.email);
-
-        if (access_token.indexOf('admin') > -1 && body_id)
-            AccessToken
+        else if (access_token.indexOf('admin') > -1 && body_id)
+            return AccessToken
                 .get(req.getOrm().redis!.connection)
                 .findOne(access_token)
                 .then(user_id => {
@@ -43,7 +42,7 @@ export const has_auth = (scope = 'access') =>
                 })
                 .catch(next);
         else
-            AccessToken
+            return AccessToken
                 .get(req.getOrm().redis!.connection)
                 .findOne(access_token)
                 .then(user_id => {
@@ -57,3 +56,6 @@ export const has_auth = (scope = 'access') =>
                 })
                 .catch(next);
     };
+
+export const hasRole = (req: restify.Request, role: string): boolean =>
+    (req.headers['x-access-token'] as string).indexOf(role) > -1;
