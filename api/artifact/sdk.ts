@@ -104,10 +104,11 @@ export const getNextArtifactByCategory = (req: Request & IOrmReq) => new Promise
                     relations: ['artifactLocation']
                 })
                 .then(categorises => {
-                    if (categorises == null) return Promise.resolve([]);
+                    if (categorises == null)
+                        return Promise.resolve([]);
                     return Promise.resolve(
                         categorises.map(categorise =>
-                            (categorise as unknown as Categorise & {artifact: Artifact}).artifact
+                            (categorise as unknown as Categorise & {artifactLocation: Artifact}).artifactLocation
                         )
                     );
                 })
