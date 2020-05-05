@@ -37,7 +37,7 @@ export const typeorm_config: PostgresConnectionOptions = Object.freeze(
 
 // import * as sequelize from 'sequelize';
 export const sequelize_config /*: sequelize.Options*/ = {
-    dialect: 'postgres' as 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mssql',
+    dialect: 'postgres' as 'mysql' | 'postgres' | 'sqlite' | 'mariadb' | 'mssql' | 'mariadb',
     define: {
         timestamps: false
     }
@@ -69,12 +69,10 @@ export const waterline_config /*: ConfigOptions*/ = Object.freeze({
 // ONLY USE `_orms_out` FOR TESTS!
 export const _orms_out: {orms_out: IOrmsOut} = { orms_out: undefined as any };
 
-export type OrmMwConfigCb = (err: Error | undefined,
-                             with_app?: IRoutesMergerConfig['with_app'],
-                             orms_out?: IOrmsOut) => void;
-
 export const getOrmMwConfig = (models: Map<string, any>, logger: Logger,
-                               cb: OrmMwConfigCb): IOrmMwConfig => ({
+                               cb: (err: Error | undefined,
+                                    with_app?: IRoutesMergerConfig['with_app'],
+                                    orms_out?: IOrmsOut) => void): IOrmMwConfig => ({
     models, logger,
     orms_in: {
         redis: {
@@ -105,7 +103,7 @@ export const getOrmMwConfig = (models: Map<string, any>, logger: Logger,
         }
         _orms_out.orms_out = orms_out!;
         return cb(void 0, (_app: TApp) => {
-            if ((_app as restify.Server).use)
+            if (_app['use'])
                 (_app as restify.Server).use(mw as RestifyRequestHandler);
             // import { Next, Server } from 'restify';
             // import { WaterlineError } from '@offscale/custom-restify-errors';
@@ -124,10 +122,10 @@ export const getPrivateIPAddress = (): string => {
         if (!interfaces.hasOwnProperty(devName)) continue;
         const iface = interfaces[devName];
 
-        for (const alias of iface) {
-            if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal)
-                return alias.address;
-        }
+        if (iface != null)
+            for (const alias of iface)
+                if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal)
+                    return alias.address;
     }
 
     return '0.0.0.0';

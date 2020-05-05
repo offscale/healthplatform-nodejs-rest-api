@@ -14,10 +14,10 @@ import { AccessToken } from './api/auth/models';
 import { User } from './api/user/models';
 import { post as register_user, UserBodyReq, UserConfig } from './api/user/sdk';
 import * as config from './config';
-import { getOrmMwConfig, getPrivateIPAddress, OrmMwConfigCb } from './config';
-import { importDrSpocData } from './import_dr_spoc';
-import { ArtifactBodyReq, createArtifact } from './api/artifact/sdk';
+import { getOrmMwConfig, getPrivateIPAddress } from './config';
 import { Artifact } from './api/artifact/models';
+import { ArtifactBodyReq, createArtifact } from './api/artifact/sdk';
+import { importDrSpocData } from './import_dr_spoc';
 
 /* tslint:disable:no-var-requires */
 export const package_ = Object.freeze(require('./package'));
@@ -34,10 +34,8 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                             mergeRoutesConfig: Partial<IRoutesMergerConfig>,
                             callback: (err: Error, app?: TApp, orms_out?: IOrmsOut) => void) =>
     waterfall([
-            (cb: OrmMwConfigCb) =>
-                ormMw(Object.assign({}, getOrmMwConfig(models_and_routes, logger, cb), mergeOrmMw)),
-            (with_app: IRoutesMergerConfig['with_app'], orms_out: IOrmsOut,
-             cb: (err: Error | undefined, app?: TApp, orms_out?: IOrmsOut) => void) =>
+        (cb: (err: Error | undefined, with_app?: ((app: TApp) => TApp) | undefined, orms_out?: IOrmsOut | undefined) => void) => ormMw(Object.assign({}, getOrmMwConfig(models_and_routes, logger, cb), mergeOrmMw)),
+            (with_app: IRoutesMergerConfig['with_app'], orms_out: IOrmsOut, cb: (arg0: Error, arg1: TApp, arg2: IOrmsOut) => any) =>
                 routesMerger(Object.assign({}, {
                     routes: models_and_routes,
                     server_type: 'restify',
@@ -51,14 +49,12 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                     version_routes_kwargs: { private_ip: getPrivateIPAddress() },
                     with_app,
                     logger,
-                    onServerStart: (uri: string, app: Server, next: (err: Error | undefined,
-                                                                     app?: TApp,
-                                                                     orms_out?: IOrmsOut) => void) => {
+                    onServerStart: (uri: string, app: Server, next: (arg0: ReferenceError | undefined, arg1?: restify.Server | undefined, arg2?: IOrmsOut | undefined) => void) => {
                         AccessToken.reset();
 
                         const authSdk = new AuthTestSDK(app);
 
-                        const envs = ['DEFAULT_ADMIN_EMAIL', 'DEFAULT_ADMIN_PASSWORD', 'SAMPLE_DATA_PATH'];
+                        const envs = ['DEFAULT_ADMIN_EMAIL', 'DEFAULT_ADMIN_PASSWORD'];
                         if (!envs.every(process.env.hasOwnProperty.bind(process.env)))
                             return next(ReferenceError(`${envs.join(', ')} must all be defined in your environment`));
 
@@ -67,7 +63,6 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                             password: process.env.DEFAULT_ADMIN_PASSWORD!,
                             roles: ['registered', 'login', 'admin']
                         };
-                        console.info('process.env.NO_SAMPLE_DATA:', process.env.NO_SAMPLE_DATA, ';');
 
                         series({
                                 unregister: callb => authSdk.unregister_all([default_admin])
@@ -91,37 +86,37 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                                     };
                                     return callb(void 0);
                                 },
-                                importData: callb =>
-                                    process.env.NO_SAMPLE_DATA == null || process.env.NO_SAMPLE_DATA === 'true' ?
-                                        callb(void 0)
-                                        : importDrSpocData(process.env.SAMPLE_DATA_PATH!, (e, artifactPaths) => {
-                                            if (e != null) return callb(e);
-                                            else if (artifactPaths == null || artifactPaths.length == null)
-                                                return callb(new TypeError('artifactPaths is empty'));
+                            importData: callb =>
+                                process.env.NO_SAMPLE_DATA == null || process.env.NO_SAMPLE_DATA === 'true' ?
+                                    callb(void 0)
+                                    : importDrSpocData(process.env.SAMPLE_DATA_PATH!, (e, artifactPaths) => {
+                                        if (e != null) return callb(e);
+                                        else if (artifactPaths == null || artifactPaths.length == null)
+                                            return callb(new TypeError('artifactPaths is empty'));
 
-                                            console.info('artifactPaths:', artifactPaths, ';');
+                                        console.info('artifactPaths:', artifactPaths, ';');
 
-                                            each(artifactPaths, (artifactPath, c_b) => {
-                                                const artifact = new Artifact();
-                                                artifact.location = artifactPath;
+                                        each(artifactPaths, (artifactPath: string, c_b) => {
+                                            const artifact = new Artifact();
+                                            artifact.location = artifactPath;
 
-                                                if (process.env.BASE_DIR_REPLACE != null && process.env.BASE_DIR != null)
-                                                    artifact.location = artifact.location
-                                                        .replace(process.env.BASE_DIR_REPLACE, process.env.BASE_DIR);
+                                            if (process.env.BASE_DIR_REPLACE != null && process.env.BASE_DIR != null)
+                                                artifact.location = artifact.location
+                                                    .replace(process.env.BASE_DIR_REPLACE, process.env.BASE_DIR);
 
-                                                artifact.contentType = 'image/jpg';
+                                            artifact.contentType = 'image/jpg';
 
-                                                createArtifact({
-                                                    getOrm: () => config._orms_out.orms_out,
-                                                    orms_out: config._orms_out.orms_out,
-                                                    body: artifact
-                                                } as IOrmReq & {body?: Artifact} as ArtifactBodyReq)
-                                                    .then(() => c_b(void 0))
-                                                    .catch(c_b)
-                                            }, callb)
-                                        })
-                                ,
-                                serve: callb =>
+                                            createArtifact({
+                                                getOrm: () => config._orms_out.orms_out,
+                                                orms_out: config._orms_out.orms_out,
+                                                body: artifact
+                                            } as IOrmReq & {body?: Artifact} as ArtifactBodyReq)
+                                                .then(() => c_b(void 0))
+                                                .catch(c_b)
+                                        }, callb)
+                                    })
+                            ,
+                            serve: callb =>
                                     typeof logger.info(`${app.name} listening from ${app.url}`) === 'undefined'
                                     && callb(void 0)
                             }, (e?: Error) => e == null ? next(void 0, app, orms_out) : raise(e)
