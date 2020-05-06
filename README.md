@@ -1,9 +1,9 @@
 healthplatform-nodejs-rest-api
 ==============================
 [![License](https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Build Status](https://travis-ci.org/healthplatform/healthplatform-nodejs-rest-api.svg?branch=master)](https://travis-ci.org/healthplatform/healthplatform-nodejs-rest-api)
-[![Coverage Status](https://coveralls.io/repos/github/healthplatform/healthplatform-nodejs-rest-api/badge.svg)](https://coveralls.io/github/healthplatform/healthplatform-nodejs-rest-api)
-![David dependency status for latest release](https://david-dm.org/healthplatform/healthplatform-nodejs-rest-api.svg)
+[![Build Status](https://travis-ci.org/offscale/healthplatform-nodejs-rest-api.svg?branch=master)](https://travis-ci.org/offscale/healthplatform-nodejs-rest-api)
+[![Coverage Status](https://coveralls.io/repos/github/offscale/healthplatform-nodejs-rest-api/badge.svg)](https://coveralls.io/github/offscale/healthplatform-nodejs-rest-api)
+![David dependency status for latest release](https://david-dm.org/offscale/healthplatform-nodejs-rest-api.svg)
 
 System for doctors to triage patient images.
 
@@ -19,7 +19,7 @@ System for doctors to triage patient images.
 
 ### External
 
-  - Database, e.g.: Postgres. Set `RDBMS_URI` env var accordingly, e.g.: `postgres://username:password@hostname:port/database_name`. Modify [config.ts](https://github.com/healthplatform/healthplatform-nodejs-rest-api/blob/master/config.ts) to use a different database.
+  - Database, e.g.: Postgres. Set `RDBMS_URI` env var accordingly, e.g.: `postgres://username:password@hostname:port/database_name`. Modify [config.ts](https://github.com/offscale/healthplatform-nodejs-rest-api/blob/master/config.ts) to use a different database.
   - Redis. Set `REDIS_URL` env var accordingly; otherwise defaults are used.
   - Set: `DEFAULT_ADMIN_EMAIL` and `DEFAULT_ADMIN_PASSWORD` env vars
 

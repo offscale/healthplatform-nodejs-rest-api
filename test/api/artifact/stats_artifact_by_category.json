@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "categoryEnumName": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "categoryEnumName",
+    "username"
+  ]
+}

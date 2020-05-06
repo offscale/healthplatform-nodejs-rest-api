@@ -4,10 +4,9 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { Artifact } from './models';
 import { JsonSchema } from 'tv4';
-import { fmtError, NotFoundError } from '@offscale/custom-restify-errors';
-import { Categorise } from '../categorise/models';
-import { MoreThanOrEqual } from 'typeorm';
+import { AuthError, fmtError, NotFoundError } from '@offscale/custom-restify-errors';
 import { IUserReq } from '../shared_interfaces';
+import { IArtifactCategoriseStats } from './interfaces';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('../../test/api/artifact/schema');
@@ -87,6 +86,73 @@ export const getManyArtifact = (req: Request & IOrmReq) => new Promise<Artifact[
         .catch(e => reject(fmtError(e)))
 );
 
+export const getStatsArtifactByCategory = (req: Request & IOrmReq & {user_id: string}) => new Promise<IArtifactCategoriseStats>((resolve, reject) => {
+    if (req.query.categoryEnumName == null)
+        return reject(new NotFoundError('categoryEnumName'));
+    else if (req.user_id == null)
+        return reject(new AuthError('req.user_id'));
+
+    req.getOrm().typeorm!.connection
+        .getRepository(Artifact)
+        .query(`SELECT total.count as total,
+                       todo.count as todo,
+                       CASE total.count
+                           WHEN 0 THEN 0
+                           ELSE todo.count::double precision / total.count::double precision
+                           END as percentage_left
+                FROM (SELECT count(artifact_tbl.location)
+                      FROM artifact_tbl
+                      WHERE location not in (
+                          SELECT "artifactLocation"
+                          FROM categorise_tbl
+                          WHERE "categoryEnumName" = $1
+                            AND username = $2
+                      )) as todo,
+                     (SELECT COUNT(*) FROM artifact_tbl) as total;`,
+            [req.query.categoryEnumName,
+                req.user_id
+            ])
+        .then((result?: IArtifactCategoriseStats[]) => {
+            if (result == null) return reject(new NotFoundError('ArtifactCategoriseStats'));
+            return resolve(result[0]);
+        })
+        .catch(e => reject(fmtError(e)));
+});
+
+export const getNextArtifactByCategory = (req: Request & IOrmReq & {user_id: string}) => new Promise<Artifact[]>((resolve, reject) => {
+    if (req.query.categoryEnumName == null)
+        return reject(new NotFoundError('categoryEnumName'));
+    else if (req.user_id == null)
+        return reject(new AuthError('req.user_id'));
+
+    req.getOrm().typeorm!.connection
+        .getRepository(Artifact)
+        .query(`SELECT *
+                FROM artifact_tbl
+                WHERE location not in (
+                    SELECT "artifactLocation"
+                    FROM categorise_tbl
+                    WHERE "categoryEnumName" = $1
+                        AND username = $2);`,
+            [req.query.categoryEnumName,
+                req.user_id
+            ])
+        .then((result?: Artifact[]) => {
+            if (result == null) return reject(new NotFoundError('ArtifactCategoriseStats'));
+            const parsed_result: Artifact[] = result.map(r => {
+                const artifact = new Artifact();
+                Object
+                    .keys(r)
+                    // @ts-ignore
+                    .forEach(k => artifact[k] = r[k]);
+                return artifact;
+            });
+            return resolve(parsed_result);
+        })
+        .catch(e => reject(fmtError(e)));
+});
+
+/*
 export const getNextArtifactByCategory = (req: Request & IOrmReq) => new Promise<Artifact[]>((resolve, reject) => {
     ((): Promise<Artifact[]> => {
         if (Object.keys(req.query).length > 0) {
@@ -136,6 +202,7 @@ export const getNextArtifactByCategory = (req: Request & IOrmReq) => new Promise
         })
         .catch(e => reject(fmtError(e)));
 });
+ */
 
 export const updateArtifact = (req: ArtifactBodyReq) => new Promise<Artifact>((resolve, reject) => {
     const ArtifactR = req.getOrm().typeorm!.connection

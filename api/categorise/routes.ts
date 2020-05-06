@@ -6,7 +6,7 @@ import { IOrmReq } from '@offscale/orm-mw/interfaces';
 
 import { has_auth } from '../auth/middleware';
 import { CategoriseBodyReq, createCategorise, getManyCategorise, schema } from './sdk';
-import { getNextArtifactByCategory } from '../artifact/sdk';
+import { getNextArtifactByCategory, getStatsArtifactByCategory } from '../artifact/sdk';
 
 export const create = (app: restify.Server, namespace: string = '') =>
     app.post(namespace, has_auth(), has_body, mk_valid_body_mw_ignore(schema, ['id', 'username']),
@@ -36,9 +36,21 @@ export const getAll = (app: restify.Server, namespace: string = '') =>
 export const getNext = (app: restify.Server, namespace: string = '') =>
     app.get(`${namespace}/next`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
-            getNextArtifactByCategory(request as unknown as Request & IOrmReq)
+            getNextArtifactByCategory(request as unknown as Request & IOrmReq & {user_id: string})
                 .then(artifacts => {
                     res.json({ artifacts });
+                    return next();
+                })
+                .catch(next)
+        }
+    );
+
+export const getStats = (app: restify.Server, namespace: string = '') =>
+    app.get(`${namespace}/stats`, has_auth(),
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            getStatsArtifactByCategory(request as unknown as Request & IOrmReq & {user_id: string})
+                .then(stats => {
+                    res.json(stats);
                     return next();
                 })
                 .catch(next)
