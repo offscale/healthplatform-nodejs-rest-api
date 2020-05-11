@@ -14,11 +14,18 @@ rawurlencode() {
      esac
      encoded+="${o}"
   done
-  printf '%s\t%s\n' "${encoded}" 'image/jpeg'
+  printf "('%s','%s'),\n" "${encoded}" 'image/jpeg'
+  #printf '%s\t%s\n' "${encoded}" 'image/jpeg'
 }
 
 export -f rawurlencode
 
-echo 'COPY public.artifact_tbl (location, "contentType") FROM stdin;'
+#echo 'COPY public.artifact_tbl (location, "contentType") FROM stdin;'
+#find "$SAMPLE_DATA_PATH" -type f -iname '*.jpg' -exec bash -c 'rawurlencode "{}"' \;
+#echo '\.'
+
+
+echo 'INSERT INTO public.artifact_tbl (location, "contentType")'
+echo 'VALUES'
 find "$SAMPLE_DATA_PATH" -type f -iname '*.jpg' -exec bash -c 'rawurlencode "{}"' \;
-echo '\.'
+echo 'ON CONFLICT(location) DO NOTHING;'
