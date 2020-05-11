@@ -34,7 +34,7 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                             mergeRoutesConfig: Partial<IRoutesMergerConfig>,
                             callback: (err: Error, app?: TApp, orms_out?: IOrmsOut) => void) =>
     waterfall([
-        (cb: (err: Error | undefined, with_app?: ((app: TApp) => TApp) | undefined, orms_out?: IOrmsOut | undefined) => void) => ormMw(Object.assign({}, getOrmMwConfig(models_and_routes, logger, cb), mergeOrmMw)),
+            (cb: (err: Error | undefined, with_app?: ((app: TApp) => TApp) | undefined, orms_out?: IOrmsOut | undefined) => void) => ormMw(Object.assign({}, getOrmMwConfig(models_and_routes, logger, cb), mergeOrmMw)),
             (with_app: IRoutesMergerConfig['with_app'], orms_out: IOrmsOut, cb: (arg0: Error, arg1: TApp, arg2: IOrmsOut) => any) =>
                 routesMerger(Object.assign({}, {
                     routes: models_and_routes,
@@ -76,7 +76,12 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                                     body: default_admin
                                 } as IOrmReq & {body?: User} as UserBodyReq, UserConfig.default())
                                     .then(() => callb())
-                                    .catch(callb),
+                                    .catch(e => {
+                                        if ((e?.error_message || '')
+                                            .startsWith('duplicate key value violates unique constraint'))
+                                            return callb(void 0);
+                                        return callb(e);
+                                    }),
                                 register_user: callb => {
                                     UserConfig.instance = {
                                         public_registration:
@@ -86,37 +91,45 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                                     };
                                     return callb(void 0);
                                 },
-                            importData: callb =>
-                                process.env.NO_SAMPLE_DATA == null || process.env.NO_SAMPLE_DATA === 'true' ?
-                                    callb(void 0)
-                                    : importDrSpocData(process.env.SAMPLE_DATA_PATH!, (e, artifactPaths) => {
-                                        if (e != null) return callb(e);
-                                        else if (artifactPaths == null || artifactPaths.length == null)
-                                            return callb(new TypeError('artifactPaths is empty'));
+                                importData: callb => console.info('GOT THERE') as any ||
+                                    process.env.NO_SAMPLE_DATA == null || process.env.NO_SAMPLE_DATA === 'true' ?
+                                        callb(void 0)
+                                        : importDrSpocData(process.env.SAMPLE_DATA_PATH!, (e, artifactPaths) => {
+                                            console.info('importDrSpocData');
+                                            if (e != null) return callb(e);
+                                            else if (artifactPaths == null || artifactPaths.length == null)
+                                                return callb(new TypeError('artifactPaths is empty'));
 
-                                        console.info('artifactPaths:', artifactPaths, ';');
+                                            console.info('artifactPaths:', artifactPaths, ';');
 
-                                        each(artifactPaths, (artifactPath: string, c_b) => {
-                                            const artifact = new Artifact();
-                                            artifact.location = artifactPath;
+                                            each(artifactPaths, (artifactPath: string, c_b) => {
+                                                const artifact = new Artifact();
+                                                artifact.location = artifactPath;
 
-                                            if (process.env.BASE_DIR_REPLACE != null && process.env.BASE_DIR != null)
-                                                artifact.location = artifact.location
-                                                    .replace(process.env.BASE_DIR_REPLACE, process.env.BASE_DIR);
+                                                if (process.env.BASE_DIR_REPLACE != null && process.env.BASE_DIR != null)
+                                                    artifact.location = artifact.location
+                                                        .replace(process.env.BASE_DIR_REPLACE, process.env.BASE_DIR);
 
-                                            artifact.contentType = 'image/jpg';
+                                                artifact.contentType = 'image/jpg';
 
-                                            createArtifact({
-                                                getOrm: () => config._orms_out.orms_out,
-                                                orms_out: config._orms_out.orms_out,
-                                                body: artifact
-                                            } as IOrmReq & {body?: Artifact} as ArtifactBodyReq)
-                                                .then(() => c_b(void 0))
-                                                .catch(c_b)
-                                        }, callb)
-                                    })
-                            ,
-                            serve: callb =>
+                                                createArtifact({
+                                                    getOrm: () => config._orms_out.orms_out,
+                                                    orms_out: config._orms_out.orms_out,
+                                                    body: artifact
+                                                } as IOrmReq & {body?: Artifact} as ArtifactBodyReq)
+                                                    .then(() => c_b(void 0))
+                                                    .catch(e => {
+                                                        if (e.jse_info.error_message
+                                                            .startsWith(
+                                                                'duplicate key value violates unique constraint '
+                                                            ))
+                                                            return c_b(void 0);
+                                                        return c_b(e);
+                                                    })
+                                            }, callb)
+                                        })
+                                ,
+                                serve: callb =>
                                     typeof logger.info(`${app.name} listening from ${app.url}`) === 'undefined'
                                     && callb(void 0)
                             }, (e?: Error) => e == null ? next(void 0, app, orms_out) : raise(e)

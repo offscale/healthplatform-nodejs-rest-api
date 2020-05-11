@@ -108,6 +108,7 @@ if (require.main === module) {
         if (e != null) throw e;
         else if (files == null)
             throw TypeError(`DrSpocData returned no files within: '${process.env.SAMPLE_DATA_PATH!}'`);
+        console.info('files.length:', files.length, ';')
         console.info(files.map(o =>
             encodeURIComponent(o.replace(process.env.BASE_DIR_REPLACE!, process.env.BASE_DIR!))
         ).join('\n'));
