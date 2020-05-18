@@ -13,6 +13,8 @@ export const has_auth = (scope = 'access') =>
         if (req.headers['x-access-token'] == null)
             if (req.params.access_token != null)
                 req.headers['x-access-token'] = req.params.access_token;
+            else if (req.query.access_token != null)
+                req.headers['x-access-token'] = req.query.access_token;
             else
                 return next(new GenericError({
                     name: 'NotFound',

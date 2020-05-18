@@ -1,12 +1,13 @@
 import { Request } from 'restify';
+import { JsonSchema } from 'tv4';
 
 import { IOrmReq } from '@offscale/orm-mw/interfaces';
-
-import { Categorise } from './models';
-import { JsonSchema } from 'tv4';
 import { fmtError, GenericError, NotFoundError } from '@offscale/custom-restify-errors';
+
 import { IUserReq } from '../shared_interfaces';
 import { hasRole } from '../auth/middleware';
+import { Categorise } from './models';
+import { ICategoriseStats } from './interfaces';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('./../../test/api/categorise/schema');
@@ -101,6 +102,26 @@ export const getCategorise = (req: Request & IOrmReq & IUserReq) => new Promise<
                 .catch(e => reject(fmtError(e)))
 );
 
+export const getCategoriseStats = (req: Request & IOrmReq & IUserReq) => new Promise<{categorise_agg_stats: ICategoriseStats[]}>(
+    (resolve, reject) =>
+        req.getOrm().typeorm!.connection
+            .getRepository(Categorise)
+            .query(`SELECT username, count(*)
+                    FROM categorise_tbl
+                    GROUP BY username;`, [])
+            /*.createQueryBuilder()
+            .select('username')
+            .addGroupBy('username')
+            .getManyAndCount()*/
+            .then((categorise_agg_stats) => {
+                if (categorise_agg_stats == null || categorise_agg_stats.length == 0)
+                    return reject(new NotFoundError('Categorise'));
+                return resolve({ categorise_agg_stats } as unknown as {categorise_agg_stats: ICategoriseStats[]});
+            })
+            .catch(e => reject(fmtError(e)))
+);
+
+
 export const getManyCategorise = (req: Request & IOrmReq & IUserReq) =>
     new Promise<Categorise[]>((resolve, reject) =>
         req.getOrm().typeorm!.connection
@@ -116,6 +137,25 @@ export const getManyCategorise = (req: Request & IOrmReq & IUserReq) =>
             }, hasRole(req, 'admin') ? {} : {
                 where: {
                     username: req.user_id!
+                }
+            }))
+            .then((categorises?: Categorise[]) =>
+                resolve(categorises == null ? [] : categorises)
+            )
+            .catch(e => reject(fmtError(e)))
+    );
+
+export const getAllCategorise = (req: Request & IOrmReq & IUserReq) =>
+    new Promise<Categorise[]>((resolve, reject) =>
+        req.getOrm().typeorm!.connection
+            .getRepository(Categorise)
+            .find(Object.assign({
+                select: req.getOrm().typeorm!.connection
+                    .getMetadata(Categorise)
+                    .columns
+                    .map(cm => cm.propertyAliasName) as any,
+                order: {
+                    updatedAt: 'ASC'
                 }
             }))
             .then((categorises?: Categorise[]) =>
