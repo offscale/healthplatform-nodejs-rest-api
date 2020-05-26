@@ -132,10 +132,14 @@ export const getNextArtifactByCategory = (req: Request & IOrmReq & {user_id: str
                 WHERE location not in (
                     SELECT "artifactLocation"
                     FROM categorise_tbl
-                    WHERE "categoryEnumName" = $1
-                        AND username = $2);`,
-            [req.query.categoryEnumName,
-                req.user_id
+                    WHERE "categoryEnumName" = $1 AND
+                          username = $2
+                    LIMIT $3
+                    OFFSET $4
+                );`,
+            [
+                req.query.categoryEnumName, req.user_id,
+                req.params.limit || null, req.params.offset || null
             ])
         .then((result?: Artifact[]) => {
             if (result == null) return reject(new NotFoundError('ArtifactCategoriseStats'));

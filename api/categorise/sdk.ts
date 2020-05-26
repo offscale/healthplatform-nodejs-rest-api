@@ -7,7 +7,7 @@ import { fmtError, GenericError, NotFoundError } from '@offscale/custom-restify-
 import { IUserReq } from '../shared_interfaces';
 import { hasRole } from '../auth/middleware';
 import { Categorise } from './models';
-import { ICategoriseStats } from './interfaces';
+import { ICategoriseDiff, ICategoriseStats } from './interfaces';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('./../../test/api/categorise/schema');
@@ -121,6 +121,95 @@ export const getCategoriseStats = (req: Request & IOrmReq & IUserReq) => new Pro
             .catch(e => reject(fmtError(e)))
 );
 
+export const getCategoriseDiff =
+    (req: Request & IOrmReq & IUserReq) => new Promise<{categorise_diff: ICategoriseDiff[]}>(
+        (resolve, reject) =>
+            req.getOrm().typeorm!.connection
+                .getRepository(Categorise)
+                .query(`SELECT
+                           C0."artifactLocation" as "artifactLocation"
+                           C0.category = C1.category AS same_categorisation,
+                           C0.category AS category0,
+                           C1.category AS category1,
+                           C0.username AS username0,
+                           C1.username AS username1
+                        FROM
+                             categorise_tbl C0,
+                             categorise_tbl C1
+                        WHERE
+                             C0.username != C1.username AND
+                             C0."artifactLocation" = C1."artifactLocation"
+                        LIMIT
+                             $1
+                        OFFSET
+                             $2;`, [req.params.limit || null, req.params.offset || null])
+                .then((categorise_diff) => {
+                    if (categorise_diff == null || categorise_diff.length == 0)
+                        return reject(new NotFoundError('Categorise'));
+                    return resolve({ categorise_diff } as unknown as {categorise_diff: ICategoriseDiff[]});
+                })
+                .catch(e => reject(fmtError(e)))
+    );
+
+export const getCategoriseDiffCount =
+    (req: Request & IOrmReq & IUserReq) => new Promise<{categorise_diff: ICategoriseDiff[]}>(
+        (resolve, reject) =>
+            req.getOrm().typeorm!.connection
+                .getRepository(Categorise)
+                .query(`SELECT COUNT(*)
+                        FROM
+                             categorise_tbl C0,
+                             categorise_tbl C1
+                        WHERE
+                             C0.username != C1.username AND
+                             C0."artifactLocation" = C1."artifactLocation";`, [])
+                .then((categorise_diff) => {
+                    if (categorise_diff == null || categorise_diff.length == 0)
+                        return reject(new NotFoundError('Categorise'));
+                    return resolve({ categorise_diff } as unknown as {categorise_diff: ICategoriseDiff[]});
+                })
+                .catch(e => reject(fmtError(e)))
+    );
+
+export const getCategoriseDiffC =
+    (req: Request & IOrmReq & IUserReq) => new Promise<string[]>(
+        (resolve, reject) => console.info('$1:', req.user_id,
+            '\nLIMIT:', req.params.limit || 'NULL',
+            '\nOFFSET:', req.params.offset || 'NULL') as any ||
+            req.getOrm().typeorm!.connection
+                .getRepository(Categorise)
+                .query(`SELECT
+                             C0."artifactLocation"
+                        FROM
+                             categorise_tbl C0,
+                             categorise_tbl C1
+                        WHERE
+                             C0.username != C1.username AND
+                             C0."artifactLocation" = C1."artifactLocation" AND
+                             C0."artifactLocation" NOT IN (
+                                 SELECT
+                                     "artifactLocation"
+                                 FROM
+                                     categorise_tbl
+                                 WHERE
+                                     username = $1
+                                     
+                             )
+                        ORDER BY
+                             C0.id
+                        LIMIT
+                             $2
+                        OFFSET
+                             $3;`,
+                    [req.user_id, req.params.limit || null, req.params.offset || null]
+                )
+                .then((artifactLocations: {artifactLocation: string}[]) => {
+                    if (artifactLocations == null || artifactLocations.length == 0)
+                        return reject(new NotFoundError('Categorise'));
+                    return resolve(artifactLocations.map(artifactLocations => artifactLocations.artifactLocation));
+                })
+                .catch(e => reject(fmtError(e)))
+    );
 
 export const getManyCategorise = (req: Request & IOrmReq & IUserReq) =>
     new Promise<Categorise[]>((resolve, reject) =>

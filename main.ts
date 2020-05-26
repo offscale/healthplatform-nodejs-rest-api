@@ -91,7 +91,7 @@ export const setupOrmApp = (models_and_routes: Map<string, any>,
                                     };
                                     return callb(void 0);
                                 },
-                                importData: callb => console.info('GOT THERE') as any ||
+                                importData: callb =>
                                     process.env.NO_SAMPLE_DATA == null || process.env.NO_SAMPLE_DATA === 'true' ?
                                         callb(void 0)
                                         : importDrSpocData(process.env.SAMPLE_DATA_PATH!, (e, artifactPaths) => {

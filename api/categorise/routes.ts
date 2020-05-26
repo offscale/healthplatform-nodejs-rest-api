@@ -9,6 +9,8 @@ import {
     CategoriseBodyReq,
     createCategorise,
     getAllCategorise,
+    getCategoriseDiff,
+    getCategoriseDiffC,
     getCategoriseStats,
     getManyCategorise,
     schema
@@ -83,6 +85,18 @@ export const getNext = (app: restify.Server, namespace: string = '') =>
         }
     );
 
+export const getNextDiff = (app: restify.Server, namespace: string = '') =>
+    app.get(`${namespace}/next_diff`, has_auth(),
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            getCategoriseDiffC(request as unknown as Request & IOrmReq & {user_id: string})
+                .then(artifactLocations => {
+                    res.json({ artifactLocations });
+                    return next();
+                })
+                .catch(next)
+        }
+    );
+
 export const getStats = (app: restify.Server, namespace: string = '') =>
     app.get(`${namespace}/stats`, has_auth(),
         (request: restify.Request, res: restify.Response, next: restify.Next) => {
@@ -101,6 +115,18 @@ export const getAggCategoriseStats = (app: restify.Server, namespace: string = '
             getCategoriseStats(request as unknown as Request & IOrmReq & {user_id: string})
                 .then(stats => {
                     res.json(stats);
+                    return next();
+                })
+                .catch(next)
+        }
+    );
+
+export const getAggCategoriseDiff = (app: restify.Server, namespace: string = '') =>
+    app.get(`${namespace}/cat_diff`, has_auth(),
+        (request: restify.Request, res: restify.Response, next: restify.Next) => {
+            getCategoriseDiff(request as unknown as Request & IOrmReq & {user_id: string})
+                .then(categorise_diff => {
+                    res.json(categorise_diff);
                     return next();
                 })
                 .catch(next)
