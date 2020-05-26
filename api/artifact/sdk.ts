@@ -94,22 +94,53 @@ export const getStatsArtifactByCategory = (req: Request & IOrmReq & {user_id: st
 
     req.getOrm().typeorm!.connection
         .getRepository(Artifact)
-        .query(`SELECT total.count as total,
-                       todo.count as todo,
-                       CASE total.count
-                           WHEN 0 THEN 0
-                           ELSE todo.count::double precision / total.count::double precision
-                           END as percentage_left
-                FROM (SELECT count(artifact_tbl.location)
-                      FROM artifact_tbl
-                      WHERE location not in (
-                          SELECT "artifactLocation"
-                          FROM categorise_tbl
-                          WHERE "categoryEnumName" = $1
-                            AND username = $2
-                      )) as todo,
-                     (SELECT COUNT(*) FROM artifact_tbl) as total;`,
-            [req.query.categoryEnumName,
+        .query(`SELECT
+                    total.count AS total,
+                    todo.count AS todo,
+                    CASE total.count
+                        WHEN 0 THEN 0
+                        ELSE todo.count::double precision / total.count::double precision
+                    END AS percentage_left,
+                    disagreements.count AS disagreements,
+                    CASE total.count
+                        WHEN 0 THEN 0
+                        ELSE disagreements.count::double precision / total.count::double precision
+                    END AS percentage_disagreed
+                FROM (
+                    SELECT
+                        COUNT(artifact_tbl.location)
+                    FROM artifact_tbl
+                    WHERE
+                        location NOT IN (
+                            SELECT
+                                "artifactLocation"
+                            FROM
+                                categorise_tbl
+                            WHERE
+                                "categoryEnumName" = $1 AND
+                                username = $2
+                        )
+                ) as todo,
+                (SELECT
+                     COUNT(*)
+                 FROM
+                     artifact_tbl
+                ) AS total,
+                (SELECT
+                     COUNT(*)
+                 FROM
+                     categorise_tbl C0,
+                     categorise_tbl C1
+                 WHERE 
+                     C0."categoryEnumName" = $1 AND
+                     C0.username != $2 AND
+                     C0.username != C1.username AND
+                     C0.category != C1.category AND
+                     C0."categoryEnumName" = C1."categoryEnumName" AND
+                     C0."artifactLocation" = C1."artifactLocation"
+                ) AS disagreements;`,
+            [
+                req.query.categoryEnumName,
                 req.user_id
             ])
         .then((result?: IArtifactCategoriseStats[]) => {
@@ -124,23 +155,60 @@ export const getNextArtifactByCategory = (req: Request & IOrmReq & {user_id: str
         return reject(new NotFoundError('categoryEnumName'));
     else if (req.user_id == null)
         return reject(new AuthError('req.user_id'));
+    else if (req.params.nextQuery == null)
+        req.params.nextQuery = 'never_seen';
 
     req.getOrm().typeorm!.connection
         .getRepository(Artifact)
-        .query(`SELECT *
-                FROM artifact_tbl
-                WHERE location not in (
-                    SELECT "artifactLocation"
-                    FROM categorise_tbl
-                    WHERE "categoryEnumName" = $1 AND
-                          username = $2
-                    LIMIT $3
-                    OFFSET $4
-                );`,
-            [
-                req.query.categoryEnumName, req.user_id,
-                req.params.limit || null, req.params.offset || null
-            ])
+        .query(
+            ...((): [string, string[]] => {
+                switch (req.params.nextQuery) {
+                    case 'disagreement':
+                        return [`
+                        SELECT *
+                        FROM artifact_tbl
+                        WHERE location NOT IN (
+                            SELECT
+                                C0."artifactLocation"
+                            FROM
+                                categorise_tbl C0,
+                                categorise_tbl C1
+                            WHERE 
+                                "categoryEnumName" = $1 AND
+                                C0.username != $2 AND
+                                C0.username != C1.username AND
+                                C0.category != C1.category AND
+                                C0."categoryEnumName" = C1."categoryEnumName" AND
+                                C0."artifactLocation" = C1."artifactLocation"
+                            LIMIT
+                                $3
+                            OFFSET
+                                $4
+                        );`, [
+                            req.query.categoryEnumName,
+                            req.user_id,
+                            req.query.limit || req.params.limit || null,
+                            req.query.offset || req.params.offset || null
+                        ]]
+                    case 'never_seen':
+                    default:
+                        return [`
+                        SELECT *
+                        FROM artifact_tbl
+                        WHERE location NOT IN (
+                            SELECT "artifactLocation"
+                            FROM categorise_tbl
+                            WHERE "categoryEnumName" = $1 AND
+                                  username = $2
+                            LIMIT $3
+                            OFFSET $4
+                        );`, [
+                            req.query.categoryEnumName, req.user_id,
+                            req.params.limit || null, req.params.offset || null
+                        ]]
+                }
+            })()
+        )
         .then((result?: Artifact[]) => {
             if (result == null) return reject(new NotFoundError('ArtifactCategoriseStats'));
             const parsed_result: Artifact[] = result.map(r => {

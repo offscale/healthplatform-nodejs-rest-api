@@ -142,7 +142,12 @@ export const getCategoriseDiff =
                         LIMIT
                              $1
                         OFFSET
-                             $2;`, [req.params.limit || null, req.params.offset || null])
+                             $2;`,
+                    [
+                        req.query.limit || req.params.limit || null,
+                        req.query.offset || req.params.offset || null
+                    ]
+                )
                 .then((categorise_diff) => {
                     if (categorise_diff == null || categorise_diff.length == 0)
                         return reject(new NotFoundError('Categorise'));
@@ -173,9 +178,7 @@ export const getCategoriseDiffCount =
 
 export const getCategoriseDiffC =
     (req: Request & IOrmReq & IUserReq) => new Promise<string[]>(
-        (resolve, reject) => console.info('$1:', req.user_id,
-            '\nLIMIT:', req.params.limit || 'NULL',
-            '\nOFFSET:', req.params.offset || 'NULL') as any ||
+        (resolve, reject) =>
             req.getOrm().typeorm!.connection
                 .getRepository(Categorise)
                 .query(`SELECT
@@ -201,7 +204,11 @@ export const getCategoriseDiffC =
                              $2
                         OFFSET
                              $3;`,
-                    [req.user_id, req.params.limit || null, req.params.offset || null]
+                    [
+                        req.user_id,
+                        req.query.limit || req.params.limit || null,
+                        req.query.offset || req.params.offset || null
+                    ]
                 )
                 .then((artifactLocations: {artifactLocation: string}[]) => {
                     if (artifactLocations == null || artifactLocations.length == 0)
