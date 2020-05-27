@@ -127,13 +127,12 @@ export const getStatsArtifactByCategory = (req: Request & IOrmReq & {user_id: st
                      artifact_tbl
                 ) AS total,
                 (SELECT
-                     COUNT(*)
+                     COUNT(distinct(C0."artifactLocation"))
                  FROM
                      categorise_tbl C0,
                      categorise_tbl C1
                  WHERE 
                      C0."categoryEnumName" = $1 AND
-                     C0.username != $2 AND
                      C0.username != C1.username AND
                      C0.category != C1.category AND
                      C0."categoryEnumName" = C1."categoryEnumName" AND
@@ -169,22 +168,22 @@ export const getNextArtifactByCategory = (req: Request & IOrmReq & {user_id: str
                         FROM artifact_tbl
                         WHERE location NOT IN (
                             SELECT
-                                C0."artifactLocation"
+                                distinct(C0."artifactLocation")
                             FROM
                                 categorise_tbl C0,
                                 categorise_tbl C1
                             WHERE 
                                 C0."categoryEnumName" = $1 AND
-                                C0.username != $2 AND
+                                C0.username = $2 AND
                                 C0.username != C1.username AND
-                                C0.category != C1.category AND
+                                C0.category = C1.category AND
                                 C0."categoryEnumName" = C1."categoryEnumName" AND
                                 C0."artifactLocation" = C1."artifactLocation"
-                            LIMIT
-                                $3
-                            OFFSET
-                                $4
-                        );`, [
+                        )
+                        LIMIT
+                            $3
+                        OFFSET
+                            $4;`, [
                             req.query.categoryEnumName,
                             req.user_id,
                             req.query.limit || req.params.limit || null,
