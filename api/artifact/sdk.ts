@@ -174,7 +174,7 @@ export const getNextArtifactByCategory = (req: Request & IOrmReq & {user_id: str
                                 categorise_tbl C0,
                                 categorise_tbl C1
                             WHERE 
-                                "categoryEnumName" = $1 AND
+                                C0."categoryEnumName" = $1 AND
                                 C0.username != $2 AND
                                 C0.username != C1.username AND
                                 C0.category != C1.category AND
