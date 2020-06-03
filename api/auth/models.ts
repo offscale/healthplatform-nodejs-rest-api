@@ -15,7 +15,7 @@ export class AccessToken {
     public static reset() {
         accessToken = undefined;
         if (global.hasOwnProperty('accessToken'))
-            delete (global as NodeJS.Global & {accessToken: AccessToken | undefined})['accessToken'];
+            delete (global as NodeJS.Global & typeof globalThis & {accessToken: AccessToken | undefined})['accessToken'];
     }
 
     public static get(cursor: Redis): AccessToken {

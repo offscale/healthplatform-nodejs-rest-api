@@ -8,6 +8,7 @@ import { IUserReq } from '../shared_interfaces';
 import { hasRole } from '../auth/middleware';
 import { Categorise } from './models';
 import { ICategoriseDiff, ICategoriseStats } from './interfaces';
+import { ObjectLiteral } from 'typeorm';
 
 /* tslint:disable:no-var-requires */
 export const schema: JsonSchema = require('./../../test/api/categorise/schema');
@@ -218,6 +219,28 @@ export const getCategoriseDiffC =
                 .catch(e => reject(fmtError(e)))
     );
 
+export const getManyCategori4se = (req: Request & IOrmReq & IUserReq) =>
+    new Promise<Categorise[]>((resolve, reject) =>
+        req.getOrm().typeorm!.connection
+            .getRepository(Categorise)
+            .find({
+                select: req.getOrm().typeorm!.connection
+                    .getMetadata(Categorise)
+                    .columns
+                    .map(cm => cm.propertyAliasName) as any,
+                order: {
+                    updatedAt: 'ASC'
+                },
+                where: {
+                    username: req.user_id!
+                }
+            })
+            .then((categorises?: Categorise[]) =>
+                resolve(categorises == null ? [] : categorises)
+            )
+            .catch(e => reject(fmtError(e)))
+    );
+
 export const getManyCategorise = (req: Request & IOrmReq & IUserReq) =>
     new Promise<Categorise[]>((resolve, reject) =>
         req.getOrm().typeorm!.connection
@@ -234,7 +257,13 @@ export const getManyCategorise = (req: Request & IOrmReq & IUserReq) =>
                 where: {
                     username: req.user_id!
                 }
-            }))
+            }) as {
+                select: (keyof Categorise)[],
+                where?: ObjectLiteral,
+                order: {
+                    [P in keyof Categorise]?: 'ASC' | 'DESC' | 1 | -1;
+                }
+            })
             .then((categorises?: Categorise[]) =>
                 resolve(categorises == null ? [] : categorises)
             )
