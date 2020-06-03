@@ -37,7 +37,7 @@
   "dependencies": {
     "@offscale/custom-restify-errors": "^0.0.12",
     "@offscale/nodejs-utils": "^0.0.16",
-    "@offscale/orm-mw": "^0.0.14",
+    "@offscale/orm-mw": "^0.0.16",
     "@offscale/restify-validators": "^0.0.9",
     "@offscale/routes-merger": "^0.0.12",
     "argon2": "0.26.2",
