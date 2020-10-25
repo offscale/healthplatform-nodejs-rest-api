@@ -101,7 +101,7 @@ describe('CategoryEnum::routes', () => {
                 done)
         );
 
-        after('unregister all Users', async() =>
+        after('unregister all Users', async () =>
             await unregister_all(auth_sdk, user_mocks_subset)
         );
 

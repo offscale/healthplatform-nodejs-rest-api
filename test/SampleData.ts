@@ -112,7 +112,7 @@ export class SampleData implements ISampleData {
                                        res: IIncomingMessageF | undefined) => {
             if (err != null) return callback(HttpError_from_IncomingMessageF(err));
             else if (res == null || res.headers == null) return callback(new HttpError('HTTP request failed'));
-            delete this.token;
+            delete (this as {token?: string}).token;
             return callback(err, this.token);
         });
     }

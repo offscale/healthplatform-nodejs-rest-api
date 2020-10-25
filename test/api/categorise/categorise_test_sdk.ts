@@ -23,7 +23,7 @@ const expect: Chai.ExpectStatic = chai.expect;
 
 const removeArtifact = (categorise: {[key: string]: any} /*& {artifact: Artifact}*/): typeof categorise =>
     categorise.hasOwnProperty('artifact') &&
-    delete (categorise as unknown as Categorise & {artifact: Artifact}).artifact &&
+    delete (categorise as unknown as Categorise & {artifact?: Artifact}).artifact &&
     categorise ||
     categorise;
 
@@ -41,6 +41,10 @@ export class CategoriseTestSDK {
 
     public set access_token(new_access_token: AccessTokenType) {
         this._access_token = new_access_token;
+    }
+
+    private static parseOutArtifactLocation(res: supertest.Response) {
+        res.body.artifactLocation = (res.body.artifactLocation as Artifact).location;
     }
 
     public get(categorise_id: Categorise['id']): Promise<Response> {
@@ -109,10 +113,6 @@ export class CategoriseTestSDK {
                 })
                 .catch(reject);
         });
-    }
-
-    private static parseOutArtifactLocation(res: supertest.Response) {
-        res.body.artifactLocation = (res.body.artifactLocation as Artifact).location;
     }
 
     public update(categorise_id: Categorise['id'], categorise: Partial<Categorise>): Promise<Response> {

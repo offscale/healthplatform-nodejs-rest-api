@@ -1,6 +1,7 @@
 import { forEachOfLimit, map } from 'async';
 import { Response } from 'supertest';
 import { Server } from 'restify';
+import { Done as MochaDone } from 'mocha';
 
 import { NotFoundError } from '@offscale/custom-restify-errors';
 import { AccessTokenType } from '@offscale/nodejs-utils/interfaces';
@@ -10,7 +11,7 @@ import { IOrmsOut } from '@offscale/orm-mw/interfaces';
 import { User } from '../api/user/models';
 import { AuthTestSDK } from './api/auth/auth_test_sdk';
 import { _orms_out } from '../config';
-import Done = Mocha.Done;
+
 
 interface IResponse extends Response {
     readonly body: ReadableStream | null | any | {access_token: AccessTokenType};
@@ -53,11 +54,11 @@ export const register_all = (auth_sdk: AuthTestSDK, mocks: User[]): Promise<User
         )
     );
 
-export const tearDownConnections = (orms_out_or_done: Done | IOrmsOut, done?: Done) =>
-    done == null ? tearDownConns(_orms_out.orms_out, e => (orms_out_or_done as Done)(e))
-        : tearDownConns(orms_out_or_done as IOrmsOut, e => (done as Done)(e));
+export const tearDownConnections = (orms_out_or_done: MochaDone | IOrmsOut, done?: MochaDone) =>
+    done == null ? tearDownConns(_orms_out.orms_out, e => (orms_out_or_done as MochaDone)(e))
+        : tearDownConns(orms_out_or_done as IOrmsOut, e => (done as MochaDone)(e));
 
-export const closeApp = (app: Server) => (done: Done) =>
+export const closeApp = (app: Server) => (done: MochaDone) =>
     app == null ? done(void 0) : app.close(() => done(void 0));
 
 // after('closeApp', done => (app as Server).close(() => done(void 0));

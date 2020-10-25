@@ -11,7 +11,7 @@ export class Artifact {
     @Column({ type: 'varchar', nullable: false, default: 'application/x-www-form-urlencoded' })
     public mimeType!: string;
 
-    @Column({type: 'varchar', nullable: false})
+    @Column({ type: 'varchar', nullable: false })
     public contentType!: string;
 
     @Column({ type: 'varchar', nullable: true })
