@@ -9,6 +9,7 @@
     "declaration": false,
     "preserveConstEnums": true,
     "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "Node",
     "suppressImplicitAnyIndexErrors": true
   }
 }

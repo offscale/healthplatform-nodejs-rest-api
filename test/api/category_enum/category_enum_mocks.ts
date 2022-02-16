@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { CategoryEnum } from '../../../api/category_enum/models';
 import { User } from '../../../api/user/models';
 import { user_mocks } from '../user/user_mocks';
